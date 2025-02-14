@@ -1,0 +1,24 @@
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -438,12 +438,21 @@ ieee80211_tx_h_multicast_ps_buf(struct i
+                info->hw_queue = tx->sdata->vif.cab_queue;
+ #endif
+ 
++#ifndef CPTCFG_WLAN_VENDOR_RWNX
+ 	info->flags |= IEEE80211_TX_CTL_SEND_AFTER_DTIM;
++#endif
+ 
+ 	/* device releases frame after DTIM beacon */
+ 	if (!ieee80211_hw_check(&tx->local->hw, HOST_BROADCAST_PS_BUFFERING))
+ 		return TX_CONTINUE;
+ 
++#ifdef CPTCFG_WLAN_VENDOR_RWNX
++	info->flags |= IEEE80211_TX_CTL_SEND_AFTER_DTIM;
++	
++	if (ieee80211_hw_check(&tx->local->hw, QUEUE_CONTROL))
++		info->hw_queue = tx->sdata->vif.cab_queue;
++#endif
++
+ 	/* buffered in mac80211 */
+ 	if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
+ 		purge_old_ps_buffers(tx->local);

@@ -1,0 +1,53 @@
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -315,6 +315,14 @@ config MAC80211_LITE_MEMORY
+        bool "mac80211 is running on the platform with lite memory, this is add by siflower"
+        depends on MAC80211
+ 
++config MAC80211_LITE_FLASH
++       bool "mac80211 is running on the platform with lite flash, this is add by siflower"
++       depends on MAC80211
++
++config MAC80211_LITE_MEMORY
++       bool "mac80211 is running on the platform with lite memory, this is add by siflower"
++       depends on MAC80211
++
+ config MAC80211_STA_HASH_MAX_SIZE
+ 	int "Station hash table maximum size" if MAC80211_DEBUG_MENU
+ 	default 0
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -61,7 +61,7 @@
+ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+ 					 const u8 *da, u16 tid,
+ 					 u8 dialog_token, u16 start_seq_num,
+-					 u16 agg_size, u16 timeout)
++					 u16 agg_size, u16 timeout, bool amsdu_supported)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+@@ -95,6 +95,7 @@ static void ieee80211_send_addba_request
+ 	mgmt->u.action.u.addba_req.action_code = WLAN_ACTION_ADDBA_REQ;
+ 
+ 	mgmt->u.action.u.addba_req.dialog_token = dialog_token;
++	capab = (u16)(amsdu_supported << 0);    /*  bit 0 AMSDU supported */
+ 	capab = IEEE80211_ADDBA_PARAM_AMSDU_MASK;
+ 	capab |= IEEE80211_ADDBA_PARAM_POLICY_MASK;
+ 	capab |= u16_encode_bits(tid, IEEE80211_ADDBA_PARAM_TID_MASK);
+@@ -379,6 +380,7 @@ int ___ieee80211_stop_tx_ba_session(stru
+ 	 * to the driver but are put onto tid_tx->pending instead,
+ 	 * with locking to ensure proper access.
+ 	 */
++	tid_tx->amsdu = false;
+ 	clear_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state);
+ 
+ 	/*
+@@ -482,7 +484,7 @@ static void ieee80211_send_addba_with_ti
+ 	/* send AddBA request */
+ 	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
+ 				     tid_tx->dialog_token, tid_tx->ssn,
+-				     buf_size, tid_tx->timeout);
++				     buf_size, tid_tx->timeout, false);
+ 
+ 	WARN_ON(test_and_set_bit(HT_AGG_STATE_SENT_ADDBA, &tid_tx->state));
+ }

@@ -1,0 +1,25 @@
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1303,12 +1303,12 @@ void cfg80211_init_wdev(struct wireless_
+ 		wdev->ps = false;
+ 	/* allow mac80211 to determine the timeout */
+ 	wdev->ps_timeout = -1;
+-
++/* Allow three - address interfaces to join the bridge
+ 	if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+ 	     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
+ 	     wdev->iftype == NL80211_IFTYPE_ADHOC) && !wdev->use_4addr)
+ 		wdev->netdev->priv_flags |= IFF_DONT_BRIDGE;
+-
++*/
+ 	INIT_WORK(&wdev->disconnect_wk, cfg80211_autodisconnect_wk);
+ }
+ 
+@@ -1479,6 +1479,7 @@ static int cfg80211_netdev_notifier_call
+ 		 * Configure power management to the driver here so that its
+ 		 * correctly set also after interface type changes etc.
+ 		 */
++
+ 		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+ 		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT) &&
+ 		    rdev->ops->set_power_mgmt &&

@@ -1,0 +1,24 @@
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7544,6 +7544,7 @@ static int nl80211_req_set_reg(struct sk
+ 	u32 owner_nlportid;
+ 	int err;
+ 	bool rd_disabled = false;
++	u32 iftype;
+ 
+ 	/*
+ 	 * You should only get this when cfg80211 hasn't yet initialized
+@@ -7571,6 +7572,13 @@ static int nl80211_req_set_reg(struct sk
+ 
+ 		data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+         err = regulatory_hint_user(data, user_reg_hint_type);
++		if (info->attrs[NL80211_ATTR_DFS_CAC_TIME]) {
++			iftype = nla_get_u32(info->attrs[NL80211_ATTR_DFS_CAC_TIME]);
++			if (iftype == NL80211_IFTYPE_STATION)
++				return err;
++			else
++				rd_disabled = true;
++		}
+         reg_set_channel_no_dfs(rd_disabled);
+         return err;
+ 	case NL80211_USER_REG_HINT_INDOOR:

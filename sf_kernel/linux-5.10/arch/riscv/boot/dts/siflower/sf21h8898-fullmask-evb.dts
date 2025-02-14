@@ -1,0 +1,242 @@
+/*
+ * Copyright 2022 SiFlower Corporation.
+ */
+
+/dts-v1/;
+#include "sf21h8898-fullmask.dtsi"
+
+/ {
+	model = "siflower sf21h8898 evaluation board";
+	compatible = "siflower,sf21h8898-evb", "siflower,sf21h8898";
+
+	chosen {
+		bootargs = "earlycon";
+		stdout-path = "serial1:115200n8";
+	};
+
+	memory@20000000 {
+		device_type = "memory";
+		reg = <0x0 0x20000000 0x0 0x20000000>;
+	};
+
+	usb_vbus: regulator@0 {
+		compatible = "regulator-fixed";
+		regulator-name = "usb_vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&gpio 38 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+	};
+};
+
+&pvt {
+	status = "okay";
+};
+
+&pcie0 {
+	reset-gpios = <&gpio 19 GPIO_ACTIVE_LOW>;
+	reset-ms = <100>;
+	num-lanes = <2>;
+	lane-mode = <1>;
+	status = "okay";
+
+	pcie@0,0 {
+		reg = <0x0000 0 0 0 0>;
+		#address-cells = <3>;
+		#size-cells = <2>;
+
+		wifi@0,0 {
+			reg = <0x0 0 0 0 0>;
+		};
+
+		wifi@0,1 {
+			reg = <0x100 0 0 0 0>;
+		};
+	};
+};
+
+&pcie1 {
+	reset-ms = <100>;
+	num-lanes = <1>;
+	lane-mode = <0>;
+	status = "disabled";
+};
+
+&watchdog {
+	status = "okay";
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&spi0 {
+	status = "okay";
+	flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
+		spi-tx-bus-width = <4>;
+		spi-rx-bus-width = <4>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+	        partitions {
+	            compatible = "fixed-partitions";
+		        #address-cells = <1>;
+			    #size-cells = <1>;
+
+				partition0@0 {
+					label = "bootloader";
+					reg = <0x0 0x90000>;
+					read-only;
+				};
+				factory:partition1@90000 {
+					label = "factory";
+					reg = <0x90000 0x10000>;
+				};
+				partition2@a0000 {
+					label = "firmware";
+					reg = <0xa0000 (-1)>;
+					compatible = "denx,fit";
+				};
+			};
+	};
+};
+
+&i2c0 {
+	status = "disabled";
+};
+
+&xgmac0 {
+	status = "okay";
+	//managed = "in-band-status";
+	phy-handle = <&ytphy0>;
+	nvmem-cells = <&mtd_mac_address>;
+	nvmem-cell-names = "mac-address";
+};
+
+&xgmac1 {
+	status = "okay";
+	//managed = "in-band-status";
+	phy-handle = <&ytphy1>;
+	nvmem-cells = <&mtd_mac_address>;
+	nvmem-cell-names = "mac-address";
+};
+
+&xgmac2 {
+	status = "okay";
+	//managed = "in-band-status";
+	phy-handle = <&ytphy2>;
+	nvmem-cells = <&mtd_mac_address>;
+	nvmem-cell-names = "mac-address";
+};
+
+&xgmac3 {
+	status = "okay";
+	//managed = "in-band-status";
+	phy-handle = <&ytphy3>;
+	nvmem-cells = <&mtd_mac_address>;
+	nvmem-cell-names = "mac-address";
+	mac-address-increment = <1>;
+};
+
+&xgmac4 {
+	status = "okay";
+//	managed = "in-band-status";
+	nvmem-cells = <&mtd_mac_address>;
+	nvmem-cell-names = "mac-address";
+
+	fixed-link {
+		speed = <2500>;
+		full-duplex;
+		pause;
+		asym-pause;
+	};
+};
+
+&xgmac5 {
+	status = "okay";
+	phy-mode = "rgmii-txid";
+	tx-internal-delay-ps = <2597>;
+	rx-internal-delay-ps = <1421>;
+	phy-handle = <&rtk8211f>;
+	nvmem-cells = <&mtd_mac_address>;
+	nvmem-cell-names = "mac-address";
+};
+
+&mdio0 {
+	clock-frequency = <10500000>;
+	reset-gpios = <&gpio 22 GPIO_ACTIVE_LOW>;
+	reset-delay-us = <10000>;
+	reset-post-delay-us = <100000>;
+
+	rtk8211f: ethernet-phy@2 {
+		compatible = "ethernet-phy-id001c.c916";
+		reg = <0x2>;
+		reset-gpios = <&gpio 1 GPIO_ACTIVE_LOW>;
+		reset-assert-us = <10000>;
+		reset-deassert-us = <100000>;
+	};
+
+	ytphy0: ethernet-phy@8 {
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0x8>;
+	};
+
+	ytphy1: ethernet-phy@9 {
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0x9>;
+	};
+
+	ytphy2: ethernet-phy@a {
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0xa>;
+	};
+
+	ytphy3: ethernet-phy@b {
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0xb>;
+	};
+};
+
+&mdio1 {
+	reset-gpios = <&gpio 39 GPIO_ACTIVE_LOW>;
+	reset-delay-us = <10000>;
+	reset-post-delay-us = <100000>;
+
+	yt9215s: switch@1d {
+		compatible = "motorcomm,yt9215s";
+		reg = <0x1d>;
+	};
+};
+
+&dpns {
+	status = "okay";
+};
+
+&edma {
+	status = "okay";
+};
+
+&qsgmii_pcs {
+	status = "okay";
+};
+
+&sgmii_pcs {
+	status = "okay";
+};
+
+&crypto {
+	status = "okay";
+};
+
+&usb_phy {
+	status = "okay";
+};
+
+&usb {
+	status = "okay";
+	vbus-supply = <&usb_vbus>;
+};
+
+#include "sf21h8898-factory.dtsi"

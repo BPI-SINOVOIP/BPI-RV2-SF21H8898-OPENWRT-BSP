@@ -1,0 +1,11 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+
+boot() {
+	case $(board_name) in
+	siflower,sf21h8898-bk-evb)
+		devmem 0x1c00fffc 32 0xFFFFFFFF
+		;;
+	esac
+}

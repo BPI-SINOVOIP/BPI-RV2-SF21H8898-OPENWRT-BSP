@@ -1,0 +1,38 @@
+--- a/hostapd/hostapd_cli.c
++++ b/hostapd/hostapd_cli.c
+@@ -716,6 +716,26 @@ static int hostapd_cli_cmd_get_config(st
+ 	return wpa_ctrl_command(ctrl, "GET_CONFIG");
+ }
+ 
++static int hostapd_cli_cmd_update(struct wpa_ctrl *ctrl, int argc,
++				      char *argv[])
++{
++	char cmd[256];
++	int res;
++
++	if (argc < 1 ) {
++		printf("Invalid update command\n"
++		       "usage: <hapd_conf>\n");
++		return -1;
++	}
++
++	res = os_snprintf(cmd, sizeof(cmd), "UPDATE %s ", argv[0]);
++	if (os_snprintf_error(sizeof(cmd), res)) {
++		printf("Too long UPDATE command.\n");
++		return -1;
++	}
++	return wpa_ctrl_command(ctrl, cmd);
++}
++
+ 
+ static int wpa_ctrl_command_sta(struct wpa_ctrl *ctrl, const char *cmd,
+ 				char *addr, size_t addr_len, int print)
+@@ -1611,6 +1631,8 @@ static const struct hostapd_cli_cmd host
+ 	  "= send BSS Transition Management Request" },
+ 	{ "get_config", hostapd_cli_cmd_get_config, NULL,
+ 	  "= show current configuration" },
++    { "update", hostapd_cli_cmd_update, NULL,
++	  "= update hostapd conf\n"},
+ 	{ "help", hostapd_cli_cmd_help, hostapd_cli_complete_help,
+ 	  "= show this usage help" },
+ 	{ "interface", hostapd_cli_cmd_interface, hostapd_complete_interface,

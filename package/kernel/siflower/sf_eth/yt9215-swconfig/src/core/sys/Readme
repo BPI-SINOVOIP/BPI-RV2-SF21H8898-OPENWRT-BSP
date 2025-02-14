@@ -1,0 +1,2 @@
+system dependent layer,
+transfer data between user space and kernel space when works in linux kernel mode e.g.

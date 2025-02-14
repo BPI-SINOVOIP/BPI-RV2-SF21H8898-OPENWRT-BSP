@@ -1,0 +1,43 @@
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -846,6 +846,8 @@ bool cfg80211_chandef_usable(struct wiph
+ 			     const struct cfg80211_chan_def *chandef,
+ 			     u32 prohibited_flags);
+ 
++bool cfg80211_chandef_dfs_available(struct wiphy *wiphy,const struct cfg80211_chan_def *chandef);
++
+ /**
+  * cfg80211_chandef_dfs_required - checks if radar detection is required
+  * @wiphy: the wiphy to validate against
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -1712,7 +1712,7 @@ int ieee80211_vif_use_channel(struct iee
+ 	ieee80211_recalc_smps_chanctx(local, ctx);
+ 	ieee80211_recalc_radar_chanctx(local, ctx);
+  out:
+-	if (ret)
++	if (ret || cfg80211_chandef_dfs_available(local->hw.wiphy, chandef))
+ 		sdata->radar_required = false;
+ 
+ 	mutex_unlock(&local->chanctx_mtx);
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -785,8 +785,7 @@ static bool cfg80211_get_chans_dfs_avail
+ 	return true;
+ }
+ 
+-static bool cfg80211_chandef_dfs_available(struct wiphy *wiphy,
+-				const struct cfg80211_chan_def *chandef)
++bool cfg80211_chandef_dfs_available(struct wiphy *wiphy,const struct cfg80211_chan_def *chandef)
+ {
+ 	int width;
+ 	int r;
+@@ -821,6 +820,8 @@ static bool cfg80211_chandef_dfs_availab
+ 	return r;
+ }
+ 
++EXPORT_SYMBOL(cfg80211_chandef_dfs_available);
++
+ static unsigned int cfg80211_get_chans_dfs_cac_time(struct wiphy *wiphy,
+ 						    u32 center_freq,
+ 						    u32 bandwidth)

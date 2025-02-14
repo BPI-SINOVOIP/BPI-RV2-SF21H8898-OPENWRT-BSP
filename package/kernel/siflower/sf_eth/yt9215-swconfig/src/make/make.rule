@@ -1,0 +1,308 @@
+#
+#
+# common dependent
+#
+SDK_INCLUDES += -I$(COMMON_PATH_INC) -I$(INCLUDE_PATH) -I$(OSAL_PATH) \
+                -I$(CORE_HAL_PATH) -I$(CORE_SW_CTRL_PATH) \
+                -I$(CORE_FAL_PATH) -I$(CORE_CAL_PATH) -I$(CORE_FAL_PROJECT_PATH) \
+                -I$(BOARDPROFILE_PATH) -I$(SDK_BASE_PATH) -I$(CORE_CHIP_DEF_PATH) \
+				-I$(CORE_MAC_DRV_PATH) -I$(CORE_PHY_DRV_PATH)
+
+SDK_SOURCE_DIRS += $(CORE_CAL_PATH) $(CORE_HAL_PATH) \
+                   $(CORE_SW_CTRL_PATH) $(COMMON_PATH_SRC) \
+				   $(CORE_CHIP_DEF_PATH) $(CORE_MAC_DRV_PATH)
+
+
+SDK_SOURCE_FILES += $(foreach dir,$(SDK_SOURCE_DIRS),$(wildcard $(dir)/*.c))
+
+#
+# compilation switch according to build config
+#
+
+ifeq ($(OS_Cyg), YES)
+SDK_COMPILATION_SWITCHES += -DOS_CYGWIN
+endif
+
+ifeq ($(User_Mode), YES)
+SDK_COMPILATION_SWITCHES += -DOS_LINUX_USR
+endif
+
+ifeq ($(OS_FreeRTOS), YES)
+SDK_COMPILATION_SWITCHES += -DOS_FREERTOS
+endif
+
+ifeq ($(Tiger), YES)
+SWITCH_SERIES := tiger
+endif
+
+ifeq ($(Board_AUTO_Detect), YES)
+SDK_COMPILATION_SWITCHES += -DBOARD_AUTO_DETECT
+endif
+
+ifeq ($(Board_YT9215RB_Default_Demo), YES)
+SDK_COMPILATION_SWITCHES += -DBOARD_YT9215RB_DEFAULT_DEMO
+endif
+
+ifeq ($(Board_YT9215RB_YT8531_Demo), YES)
+SDK_COMPILATION_SWITCHES += -DBOARD_YT9215RB_YT8531_DEMO
+endif
+
+ifeq ($(Board_YT9215S_YT8531_Fib_Demo), YES)
+SDK_COMPILATION_SWITCHES += -DBOARD_YT9215S_YT8531_FIB_DEMO
+endif
+
+ifeq ($(Board_YT9215S_Fib_Demo), YES)
+SDK_COMPILATION_SWITCHES += -DBOARD_YT9215S_FIB_DEMO
+endif
+
+ifeq ($(Board_YT9215SC_Default_Demo), YES)
+SDK_COMPILATION_SWITCHES += -DBOARD_YT9215SC_DEFAULT_DEMO
+endif
+
+ifeq (${SWITCH_SERIES}, tiger)
+SDK_COMPILATION_SWITCHES += -DSWITCH_SERIES_TIGER -DSDK_DATABASE_HW_EN
+endif
+
+ifeq (${INTER_MCU}, YES)
+SDK_COMPILATION_SWITCHES += -DINTER_MCU
+endif
+
+#
+# supported phy list
+#
+SDK_SOURCE_FILES         += $(CORE_PHY_DRV_PATH)/phy_drv.c \
+                            $(CORE_PHY_DRV_PATH)/phy_int_yt861x.c
+
+ifeq (${PHY_YT8531}, YES)
+SDK_COMPILATION_SWITCHES += -DPHY_YT8531_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_PHY_DRV_PATH)/phy_yt8531.c
+endif
+
+ifeq ($(findstring YES, $(Board_YT9215S_YT8531_Fib_Demo)$(Board_YT9215S_Fib_Demo)$(Board_YT9215SC_Default_Demo)), YES)
+SDK_SOURCE_FILES         += $(CORE_PHY_DRV_PATH)/phy_int_serdes.c
+endif
+
+#
+# function modules
+#
+SDK_SOURCE_FILES         += $(CORE_API_PATH)/yt_init.c \
+                            $(CORE_API_PATH)/yt_exit.c
+
+
+ifneq ($(INTERNAL_MSG_DEBUG), YES)
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_tiger_struct.c \
+							$(CORE_FAL_PROJECT_PATH)/fal_tiger_index.c
+endif
+
+SDK_SOURCE_FILES         += $(CORE_FAL_PATH)/fal_init.c \
+                            $(CORE_FAL_PATH)/fal_dispatch.c
+
+ifeq (${MODULE_MONITOR}, YES)
+SDK_COMPILATION_SWITCHES += -DMONITOR_INCLUDED
+SDK_SOURCE_FILES         += $(OSAL_PATH)/osal_thread.c
+SDK_SOURCE_FILES         += $(CORE_FAL_PATH)/fal_monitor.c
+endif
+
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_dispatch.c
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_init.c
+
+ifeq (${MODULE_SYS}, YES)
+SDK_COMPILATION_SWITCHES += -DSYS_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_sys.c \
+                            $(CORE_API_PATH)/yt_sys.c
+endif
+
+ifeq (${MODULE_ACL}, YES)
+SDK_COMPILATION_SWITCHES += -DACL_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_acl.c \
+                            $(CORE_API_PATH)/yt_acl.c
+endif
+
+ifeq (${MODULE_CTRLPKT}, YES)
+SDK_COMPILATION_SWITCHES += -DCTRLPKT_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_ctrlpkt.c \
+                            $(CORE_API_PATH)/yt_ctrlpkt.c
+endif
+
+ifeq (${MODULE_DOS}, YES)
+SDK_COMPILATION_SWITCHES += -DDOS_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_dos.c \
+                            $(CORE_API_PATH)/yt_dos.c
+endif
+
+ifeq (${MODULE_DOT1X}, YES)
+SDK_COMPILATION_SWITCHES += -DDOT1X_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_dot1x.c \
+                            $(CORE_API_PATH)/yt_dot1x.c
+endif
+
+ifeq (${MODULE_INTERRUPT}, YES)
+SDK_COMPILATION_SWITCHES += -DINTERRUPT_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_interrupt.c \
+                            $(CORE_API_PATH)/yt_interrupt.c
+endif
+
+ifeq (${MODULE_L2}, YES)
+SDK_COMPILATION_SWITCHES += -DL2_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_l2.c \
+                            $(CORE_API_PATH)/yt_l2.c
+endif
+
+ifeq (${MODULE_LAG}, YES)
+SDK_COMPILATION_SWITCHES += -DLAG_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_lag.c \
+                            $(CORE_API_PATH)/yt_lag.c
+endif
+
+ifeq (${MODULE_HW_LOOPDETECT}, YES)
+SDK_COMPILATION_SWITCHES += -DHW_LOOPDETECT_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_loopdetect.c \
+                            $(CORE_API_PATH)/yt_loopdetect.c
+endif
+
+ifeq (${MODULE_PORT_MIRROR}, YES)
+SDK_COMPILATION_SWITCHES += -DPORT_MIRROR_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_mirror.c \
+                            $(CORE_API_PATH)/yt_mirror.c
+endif
+
+ifeq (${MODULE_HW_MULTICAST}, YES)
+SDK_COMPILATION_SWITCHES += -DHW_MULTICAST_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_multicast.c \
+                            $(CORE_API_PATH)/yt_multicast.c
+endif
+
+ifeq (${MODULE_NIC}, YES)
+SDK_COMPILATION_SWITCHES += -DNIC_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_nic.c \
+                            $(CORE_API_PATH)/yt_nic.c
+endif
+
+ifeq (${MODULE_OAM}, YES)
+SDK_COMPILATION_SWITCHES += -DOAM_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_oam.c \
+                            $(CORE_API_PATH)/yt_oam.c
+endif
+
+ifeq (${MODULE_PORT}, YES)
+SDK_COMPILATION_SWITCHES += -DPORT_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_port.c \
+                            $(CORE_API_PATH)/yt_port.c
+endif
+
+ifeq (${MODULE_PORT_ISO}, YES)
+SDK_COMPILATION_SWITCHES += -DPORT_ISO_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_port_isolation.c \
+                            $(CORE_API_PATH)/yt_port_isolation.c
+endif
+
+ifeq (${MODULE_QOS}, YES)
+SDK_COMPILATION_SWITCHES += -DQOS_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_qos.c \
+                            $(CORE_API_PATH)/yt_qos.c
+endif
+
+ifeq (${MODULE_RATE}, YES)
+SDK_COMPILATION_SWITCHES += -DRATE_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_rate.c \
+                            $(CORE_API_PATH)/yt_rate.c
+endif
+
+ifeq (${MODULE_RMA}, YES)
+SDK_COMPILATION_SWITCHES += -DRMA_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_rma.c \
+                            $(CORE_API_PATH)/yt_rma.c
+endif
+
+ifeq (${MODULE_STAT}, YES)
+SDK_COMPILATION_SWITCHES += -DSTAT_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_stat.c \
+                            $(CORE_API_PATH)/yt_stat.c
+endif
+
+ifeq (${MODULE_STORM_CTRL}, YES)
+SDK_COMPILATION_SWITCHES += -DSTORM_CTRL_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_storm_ctrl.c \
+                            $(CORE_API_PATH)/yt_storm_ctrl.c
+endif
+
+ifeq (${MODULE_HW_STP}, YES)
+SDK_COMPILATION_SWITCHES += -DHW_STP_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_stp.c \
+                            $(CORE_API_PATH)/yt_stp.c
+endif
+
+ifeq (${MODULE_VLAN}, YES)
+SDK_COMPILATION_SWITCHES += -DVLAN_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_vlan.c \
+                            $(CORE_API_PATH)/yt_vlan.c
+endif
+
+ifeq (${MODULE_VLAN_TRANS}, YES)
+SDK_COMPILATION_SWITCHES += -DVLAN_TRANS_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_vlan_translate.c \
+                            $(CORE_API_PATH)/yt_vlan_translate.c
+endif
+
+ifeq (${MODULE_WOL}, YES)
+SDK_COMPILATION_SWITCHES += -DWOL_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_wol.c \
+                            $(CORE_API_PATH)/yt_wol.c
+endif
+
+ifeq (${MODULE_LED}, YES)
+SDK_COMPILATION_SWITCHES += -DLED_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_led.c \
+                            $(CORE_API_PATH)/yt_led.c
+endif
+
+ifeq (${MODULE_SENSOR}, YES)
+SDK_COMPILATION_SWITCHES += -DSENSOR_INCLUDED
+SDK_SOURCE_FILES         += $(CORE_FAL_PROJECT_PATH)/fal_$(SWITCH_SERIES)_sensor.c \
+                            $(CORE_API_PATH)/yt_sensor.c
+endif
+
+
+#
+# add app
+#
+ifeq ($(UART), YES)
+SDK_COMPILATION_SWITCHES += -DACC_UART
+SDK_INCLUDES += -I$(CORE_SW_CTRL_PATH)/uart
+SDK_SOURCE_FILES += $(CORE_SW_CTRL_PATH)/uart/uart.c
+endif
+
+ifeq ($(CTRLIF), YES)
+SDK_COMPILATION_SWITCHES += -DACC_CTRLIF
+SDK_INCLUDES += -I$(CORE_SW_CTRL_PATH)/ctrlif
+SDK_SOURCE_FILES += $(wildcard $(CORE_SW_CTRL_PATH)/ctrlif/*.c)
+endif
+
+ifeq ($(MEM), YES)
+SDK_COMPILATION_SWITCHES += -DACC_MEM
+SDK_INCLUDES += -I$(CORE_SW_CTRL_PATH)/mem
+SDK_SOURCE_FILES += $(wildcard $(CORE_SW_CTRL_PATH)/mem/*.c)
+endif
+
+SDK_SOURCE_FILES += $(SDK_ROOT_PATH)/swconfig.c
+
+#
+# add shadow objects
+#
+
+#
+# all objects
+#
+SDK_SOURCE_OBJECTS += $(patsubst %.c,%.o,$(SDK_SOURCE_FILES))
+
+#
+# Path conversion(Relative path/Absolute path)
+#
+
+TMP_OBJECTS = $(subst $(SDK_BASE_PATH), .., $(SDK_SOURCE_OBJECTS))
+SDK_SOURCE_OBJECTS := $(TMP_OBJECTS)
+
+ifeq ($(COMPILE_SYS), Cygwin)
+	TMP_INCLUDES = $(subst $(SDK_BASE_PATH), .., $(SDK_INCLUDES))
+	SDK_INCLUDES := $(TMP_INCLUDES)
+endif

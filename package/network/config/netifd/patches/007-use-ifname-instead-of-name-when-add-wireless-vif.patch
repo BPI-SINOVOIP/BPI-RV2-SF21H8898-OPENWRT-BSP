@@ -1,0 +1,13 @@
+Index: netifd-2022-02-20-136006b8/scripts/netifd-wireless.sh
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/scripts/netifd-wireless.sh
++++ netifd-2022-02-20-136006b8/scripts/netifd-wireless.sh
+@@ -140,7 +140,7 @@ _wireless_add_vif() {
+ 	local name="$1"; shift
+ 	local ifname="$1"; shift
+ 
+-	_wdev_notify_init $CMD_SET_DATA "interface" "$name"
++	_wdev_notify_init $CMD_SET_DATA "$ifname"
+ 	json_add_string "ifname" "$ifname"
+ 	_wdev_add_variables "$@"
+ 	_wdev_notify

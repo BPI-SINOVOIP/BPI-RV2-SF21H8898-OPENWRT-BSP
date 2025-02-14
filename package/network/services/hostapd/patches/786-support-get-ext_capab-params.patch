@@ -1,0 +1,61 @@
+--- a/src/ap/ap_drv_ops.c
++++ b/src/ap/ap_drv_ops.c
+@@ -418,7 +418,8 @@ int hostapd_sta_add(struct hostapd_data
+ 		    size_t he_capab_len,
+ 		    const struct ieee80211_he_6ghz_band_cap *he_6ghz_capab,
+ 		    u32 flags, u8 qosinfo, u8 vht_opmode, int supp_p2p_ps,
+-		    int set, u8 *supported_channels, u8 supported_channels_len)
++		    int set, u8 *supported_channels, u8 supported_channels_len,
++		    u8 *ext_capability)
+ {
+ 	struct hostapd_sta_add_params params;
+ 
+@@ -447,6 +448,13 @@ int hostapd_sta_add(struct hostapd_data
+ 	params.set = set;
+ 	params.supp_channels = supported_channels;
+ 	params.supp_channels_len = supported_channels_len;
++	if (ext_capability) {
++		params.ext_capab_len = ext_capability[0];
++		params.ext_capab = ext_capability + 1;
++	} else {
++		params.ext_capab_len = 0;
++		params.ext_capab = NULL;
++	}
+ 	return hapd->driver->sta_add(hapd->drv_priv, &params);
+ }
+ 
+--- a/src/ap/ap_drv_ops.h
++++ b/src/ap/ap_drv_ops.h
+@@ -45,7 +45,8 @@ int hostapd_sta_add(struct hostapd_data
+ 		    size_t he_capab_len,
+ 		    const struct ieee80211_he_6ghz_band_cap *he_6ghz_capab,
+ 		    u32 flags, u8 qosinfo, u8 vht_opmode, int supp_p2p_ps,
+-		    int set, u8 *supported_channels, u8 supported_channels_len);
++		    int set, u8 *supported_channels, u8 supported_channels_len,
++		    u8 *ext_capability);
+ int hostapd_set_privacy(struct hostapd_data *hapd, int enabled);
+ int hostapd_set_generic_elem(struct hostapd_data *hapd, const u8 *elem,
+ 			     size_t elem_len);
+--- a/src/ap/ieee802_11.c
++++ b/src/ap/ieee802_11.c
+@@ -5007,7 +5007,8 @@ static int add_associated_sta(struct hos
+ 			    sta->he_6ghz_capab,
+ 			    sta->flags | WLAN_STA_ASSOC, sta->qosinfo,
+ 			    sta->vht_opmode, sta->p2p_ie ? 1 : 0,
+-			    set, sta->supported_channels, sta->supported_channels_len)) {
++			    set, sta->supported_channels, sta->supported_channels_len,
++			    sta->ext_capability)) {
+ 		hostapd_logger(hapd, sta->addr,
+ 			       HOSTAPD_MODULE_IEEE80211, HOSTAPD_LEVEL_NOTICE,
+ 			       "Could not %s STA to kernel driver",
+--- a/src/ap/sta_info.c
++++ b/src/ap/sta_info.c
+@@ -1657,7 +1657,7 @@ int ap_sta_re_add(struct hostapd_data *h
+ 			    sta->supported_rates,
+ 			    sta->supported_rates_len,
+ 			    0, NULL, NULL, NULL, 0, NULL,
+-			    sta->flags, 0, 0, 0, 0, NULL, 0)) {
++			    sta->flags, 0, 0, 0, 0, NULL, 0, NULL)) {
+ 		hostapd_logger(hapd, sta->addr,
+ 			       HOSTAPD_MODULE_IEEE80211,
+ 			       HOSTAPD_LEVEL_NOTICE,

@@ -1,0 +1,99 @@
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4255,6 +4255,8 @@ struct ieee80211_ops {
+ 	void (*del_nan_func)(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+ 			    u8 instance_id);
++	int (*priv_ioctl)(struct ieee80211_hw *hw, struct ifreq *rq, int cmd);	
++
+ 	bool (*can_aggregate_in_amsdu)(struct ieee80211_hw *hw,
+ 				       struct sk_buff *head,
+ 				       struct sk_buff *skb);
+--- a/local-symbols
++++ b/local-symbols
+@@ -65,6 +65,7 @@ MAC80211_MESH_PS_DEBUG=
+ MAC80211_TDLS_DEBUG=
+ MAC80211_DEBUG_COUNTERS=
+ MAC80211_STA_HASH_MAX_SIZE=
++MAC80211_PRIV_IOCTL=
+ QRTR=
+ QRTR_SMD=
+ QRTR_TUN=
+@@ -460,6 +461,7 @@ USB_ACM=
+ USB_PRINTER=
+ USB_WDM=
+ USB_TMC=
++WLAN_VENDOR_RWNX=
+ STAGING=
+ RTL8723BS=
+ R8188EU=
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -295,6 +295,9 @@ config MAC80211_DEBUG_COUNTERS
+ 	  and may thus not always be accurate.
+ 
+ 	  If unsure, say N.
++config MAC80211_PRIV_IOCTL
++	bool "Enable mac80211's private ioctl function, this is add by siflower"
++	depends on MAC80211
+ 
+ config MAC80211_STA_HASH_MAX_SIZE
+ 	int "Station hash table maximum size" if MAC80211_DEBUG_MENU
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -85,6 +85,19 @@ static inline int drv_get_et_sset_count(
+ int drv_start(struct ieee80211_local *local);
+ void drv_stop(struct ieee80211_local *local);
+ 
++#ifdef CPTCFG_MAC80211_PRIV_IOCTL
++static inline int drv_ioctl(struct ieee80211_local *local,
++                struct ifreq *rq, int cmd)
++{
++    int ret = 0;
++       might_sleep();
++
++    if(local->ops->priv_ioctl)
++        ret = local->ops->priv_ioctl(&local->hw, rq, cmd);
++    return ret;
++}
++#endif
++
+ #ifdef CONFIG_PM
+ static inline int drv_suspend(struct ieee80211_local *local,
+ 			      struct cfg80211_wowlan *wowlan)
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -772,6 +772,21 @@ static int __change_mtu(struct net_devic
+ }
+ #endif
+ 
++#ifdef CPTCFG_MAC80211_PRIV_IOCTL
++static int ieee80211_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
++{
++       //if some driver do not implement the ioctl function,
++       //do nothing
++
++       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++       struct ieee80211_local *local = sdata->local;
++       int ret = -1;
++
++       ret = drv_ioctl(local, ifr, cmd);
++       return ret;
++}
++#endif
++
+ static const struct net_device_ops ieee80211_dataif_ops = {
+ #if LINUX_VERSION_IS_LESS(4,10,0)
+ 	.ndo_change_mtu = __change_mtu,
+@@ -787,7 +802,10 @@ static const struct net_device_ops ieee8
+ #if LINUX_VERSION_IS_GEQ(4,11,0)
+ 	.ndo_get_stats64	= ieee80211_get_stats64,
+ #else
+-	.ndo_get_stats64 = bp_ieee80211_get_stats64,
++	.ndo_get_stats64        = bp_ieee80211_get_stats64,
++#endif
++#ifdef CPTCFG_MAC80211_PRIV_IOCTL
++	.ndo_do_ioctl           = ieee80211_do_ioctl,
+ #endif
+ 
+ };

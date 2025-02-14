@@ -1,0 +1,42 @@
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1628,8 +1628,39 @@ static const iw_handler cfg80211_handler
+ 	[IW_IOCTL_IDX(SIOCSIWPMKSA)]	= __cfg80211_wext_siwpmksa,
+ };
+ 
++/* RM#1002954 mac80211: Add private wext handler for ioctl. */
++static int siwifi_priv_ioctl(struct net_device *dev,
++				  struct iw_request_info *info,
++				  union iwreq_data *wrqu, char *extra)
++{
++	struct ifreq ifr;
++	struct iwreq *iwr;
++	int ret = 0;
++
++	memset(&ifr, 0, sizeof(struct ifreq));
++	memcpy(&ifr.ifr_ifru, wrqu, sizeof(union iwreq_data));
++	memcpy(ifr.ifr_ifrn.ifrn_name, dev->name, IFNAMSIZ);
++	if (dev->netdev_ops->ndo_do_ioctl) {
++		ret = dev->netdev_ops->ndo_do_ioctl(dev, &ifr, info->cmd);
++		iwr = (struct iwreq *)(&ifr);
++		wrqu->data.length = iwr->u.data.length;
++		return ret;
++	}
++
++	return -EOPNOTSUPP;
++}
++
++#define SFCFG_PRIV_IOCTL_ATE		(SIOCIWFIRSTPRIV + 0x08)
++#define SFCFG_PRIV_IOCTL_IFACE		(SIOCIWFIRSTPRIV + 0x09)
++static const iw_handler siwifi_handlers_private[] = {
++	[SFCFG_PRIV_IOCTL_ATE - SIOCIWFIRSTPRIV]	= siwifi_priv_ioctl,
++	[SFCFG_PRIV_IOCTL_IFACE - SIOCIWFIRSTPRIV]	= siwifi_priv_ioctl,
++};
++
+ const struct iw_handler_def cfg80211_wext_handler = {
+ 	.num_standard		= ARRAY_SIZE(cfg80211_handlers),
+ 	.standard		= cfg80211_handlers,
++	.num_private		= ARRAY_SIZE(siwifi_handlers_private),
++	.private		= siwifi_handlers_private,
+ 	.get_wireless_stats = cfg80211_wireless_stats,
+ };

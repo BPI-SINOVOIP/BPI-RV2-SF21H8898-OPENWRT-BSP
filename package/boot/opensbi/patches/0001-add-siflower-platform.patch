@@ -1,0 +1,616 @@
+--- /dev/null
++++ b/include/sbi_utils/serial/uartpl011.h
+@@ -0,0 +1,55 @@
++/*
++ * SPDX-License-Identifier: BSD-2-Clause
++ *
++ * Copyright (c) 2024 Siflower Communications
++ *
++ * Authors:
++ *   Qingfang Deng <qingfang.deng@siflower.com.cn>
++ */
++
++#ifndef __SERIAL_UARTPL011_H__
++#define __SERIAL_UARTPL011_H__
++
++#include <sbi/sbi_types.h>
++
++#define ODD_PARITY	1
++#define EVEN_PARITY	2
++#define MASK_PARITY	3
++#define NULL_PARITY	4
++#define NO_PARITY	5
++
++#define UART_DR		0x00  // Data Register
++#define UART_RSR	0x04  // Receive Status Register
++#define UART_ECR	0x04  // Error Clear Register
++#define UART_FR		0x18  // Flag Register
++#define UART_ILPR	0x20  // IrDA Low-Power Counter Register
++#define UART_IBRD	0x24  // Integer Baud Rate Register
++#define UART_FBRD	0x28  // Fractional Baud Rate Register
++#define UART_LCRH	0x2c  // Line Control Register
++#define UART_CR		0x30  // Control Register
++#define UART_IFLS	0x34  // Interrupt FIFO Level Select Register
++#define UART_IMSC	0x38  // Interrupt Mask Set/Clear Register
++#define UART_RIS	0x3c  // Raw Interrupt Status Register
++#define UART_MIS	0x40  // Masked Interrupt Status Register
++#define UART_ICR	0x44  // Interrupt Clear Register
++#define UART_DMACR	0x48  // DMA Control Register
++
++#define UART_FR_CTS		(1 << 0)
++#define UART_FR_RXFE		(1 << 4)
++#define UART_FR_TXFF		(1 << 5)
++#define UART_FR_TXFE		(1 << 7)
++#define UART_LCRH_BRK		(1 << 0)
++#define UART_LCRH_PEN		(1 << 1)
++#define UART_LCRH_EPS		(1 << 2)
++#define UART_LCRH_STP2		(1 << 3)
++#define UART_LCRH_FEN		(1 << 4)
++#define UART_LCRH_WLEN0		(1 << 5)
++#define UART_LCRH_WLEN1		(1 << 6)
++#define UART_LCRH_SPS		(1 << 7)
++#define UART_CR_RTS		(1 << 11)
++
++#define UART_FIFO_DEPTH		32
++
++int uartpl011_init(ulong baseaddr, u32 uart_clk, u32 baudrate);
++
++#endif /* __SERIAL_UARTPL011_H__ */
+--- a/lib/utils/reset/Kconfig
++++ b/lib/utils/reset/Kconfig
+@@ -33,6 +33,10 @@ config FDT_RESET_SG2042_HWMON_MCU
+ 	bool "Sophgo SG2042 hwmon MCU FDT reset driver"
+ 	default n
+ 
++config FDT_RESET_SIFLOWER
++	bool "Siflower FDT reset driver"
++	default n
++
+ config FDT_RESET_SUNXI_WDT
+ 	bool "Sunxi WDT FDT reset driver"
+ 	default n
+--- /dev/null
++++ b/lib/utils/reset/fdt_reset_siflower.c
+@@ -0,0 +1,80 @@
++/*
++ * SPDX-License-Identifier: BSD-2-Clause
++ *
++ * Copyright (c) 2024 Siflower Communications
++ *
++ * Authors:
++ *   Qingfang Deng <qingfang.deng@siflower.com.cn>
++ */
++
++#include <sbi/riscv_io.h>
++#include <sbi/sbi_ecall_interface.h>
++#include <sbi/sbi_system.h>
++#include <sbi_utils/fdt/fdt_helper.h>
++#include <sbi_utils/reset/fdt_reset.h>
++
++#define SYSM_RESET		0x14
++
++static uint64_t brom_sysm_base;
++
++static int siflower_system_reset_check(u32 type, u32 reason)
++{
++	switch (type) {
++	case SBI_SRST_RESET_TYPE_SHUTDOWN:
++	case SBI_SRST_RESET_TYPE_COLD_REBOOT:
++	case SBI_SRST_RESET_TYPE_WARM_REBOOT:
++		return 1;
++	default:
++		return 0;
++	}
++}
++
++static void siflower_system_reset(u32 type, u32 reason)
++{
++	switch (reason)
++	{
++	case SBI_SRST_RESET_REASON_NONE:
++	case SBI_SRST_RESET_REASON_SYSFAIL:
++		/* hardware requires a non-zero value, so offset by one */
++		reason++;
++		break;
++	default:
++		break;
++	}
++
++	writel_relaxed(reason, (volatile void *)brom_sysm_base + SYSM_RESET);
++	mb();
++
++	while (1)
++		wfi();
++}
++
++static struct sbi_system_reset_device siflower_reset = {
++	.name = "siflower,brom-sysm",
++	.system_reset_check = siflower_system_reset_check,
++	.system_reset = siflower_system_reset,
++};
++
++static int siflower_reset_init(const void *fdt, int nodeoff,
++			       const struct fdt_match *match)
++{
++	int rc;
++
++	rc = fdt_get_node_addr_size(fdt, nodeoff, 0, &brom_sysm_base, NULL);
++	if (rc < 0)
++		return rc;
++
++	sbi_system_reset_add_device(&siflower_reset);
++
++	return 0;
++}
++
++static const struct fdt_match siflower_reset_match[] = {
++	{ .compatible = siflower_reset.name, },
++	{ },
++};
++
++const struct fdt_driver fdt_reset_siflower = {
++	.match_table = siflower_reset_match,
++	.init = siflower_reset_init,
++};
+--- a/lib/utils/reset/objects.mk
++++ b/lib/utils/reset/objects.mk
+@@ -23,6 +23,9 @@ libsbiutils-objs-$(CONFIG_FDT_RESET_HTIF
+ carray-fdt_reset_drivers-$(CONFIG_FDT_RESET_SG2042_HWMON_MCU) += fdt_reset_sg2042_mcu
+ libsbiutils-objs-$(CONFIG_FDT_RESET_SG2042_HWMON_MCU) += reset/fdt_reset_sg2042_hwmon_mcu.o
+ 
++carray-fdt_reset_drivers-$(CONFIG_FDT_RESET_SIFLOWER) += fdt_reset_siflower
++libsbiutils-objs-$(CONFIG_FDT_RESET_SIFLOWER) += reset/fdt_reset_siflower.o
++
+ carray-fdt_reset_drivers-$(CONFIG_FDT_RESET_SUNXI_WDT) += fdt_reset_sunxi_wdt
+ libsbiutils-objs-$(CONFIG_FDT_RESET_SUNXI_WDT) += reset/fdt_reset_sunxi_wdt.o
+ 
+--- a/lib/utils/serial/Kconfig
++++ b/lib/utils/serial/Kconfig
+@@ -49,6 +49,11 @@ config FDT_SERIAL_UART8250
+ 	select SERIAL_UART8250
+ 	default n
+ 
++config FDT_SERIAL_UARTPL011
++	bool "PL011 UART FDT driver"
++	select SERIAL_UARTPL011
++	default n
++
+ config FDT_SERIAL_XILINX_UARTLITE
+ 	bool "Xilinx UART Lite FDT driver"
+ 	select SERIAL_XILINX_UARTLITE
+@@ -84,6 +89,10 @@ config SERIAL_UART8250
+ 	bool "8250 UART support"
+ 	default n
+ 
++config SERIAL_UARTPL011
++	bool "PL011 UART support"
++	default n
++
+ config SERIAL_XILINX_UARTLITE
+ 	bool "Xilinx UART Lite support"
+ 	default n
+--- /dev/null
++++ b/lib/utils/serial/fdt_serial_uartpl011.c
+@@ -0,0 +1,35 @@
++/*
++ * SPDX-License-Identifier: BSD-2-Clause
++ *
++ * Copyright (c) 2024 Siflower Communications
++ *
++ * Authors:
++ *   Qingfang Deng <qingfang.deng@siflower.com.cn>
++ */
++
++#include <sbi_utils/fdt/fdt_helper.h>
++#include <sbi_utils/serial/fdt_serial.h>
++#include <sbi_utils/serial/uartpl011.h>
++
++static int serial_uartpl011_init(const void *fdt, int nodeoff,
++				const struct fdt_match *match)
++{
++	int rc;
++	struct platform_uart_data uart = { 0 };
++
++	rc = fdt_parse_uart_node(fdt, nodeoff, &uart);
++	if (rc)
++		return rc;
++
++	return uartpl011_init(uart.addr, uart.freq, uart.baud);
++}
++
++static const struct fdt_match serial_uartpl011_match[] = {
++	{ .compatible = "arm,pl011" },
++	{ },
++};
++
++const struct fdt_driver fdt_serial_uartpl011 = {
++	.match_table = serial_uartpl011_match,
++	.init = serial_uartpl011_init,
++};
+--- a/lib/utils/serial/objects.mk
++++ b/lib/utils/serial/objects.mk
+@@ -34,6 +34,9 @@ libsbiutils-objs-$(CONFIG_FDT_SERIAL_LIT
+ carray-fdt_serial_drivers-$(CONFIG_FDT_SERIAL_UART8250) += fdt_serial_uart8250
+ libsbiutils-objs-$(CONFIG_FDT_SERIAL_UART8250) += serial/fdt_serial_uart8250.o
+ 
++carray-fdt_serial_drivers-$(CONFIG_FDT_SERIAL_UARTPL011) += fdt_serial_uartpl011
++libsbiutils-objs-$(CONFIG_FDT_SERIAL_UARTPL011) += serial/fdt_serial_uartpl011.o
++
+ carray-fdt_serial_drivers-$(CONFIG_FDT_SERIAL_XILINX_UARTLITE) += fdt_serial_xlnx_uartlite
+ libsbiutils-objs-$(CONFIG_FDT_SERIAL_XILINX_UARTLITE) += serial/fdt_serial_xlnx_uartlite.o
+ 
+@@ -44,5 +47,6 @@ libsbiutils-objs-$(CONFIG_SERIAL_SHAKTI)
+ libsbiutils-objs-$(CONFIG_SERIAL_SIFIVE) += serial/sifive-uart.o
+ libsbiutils-objs-$(CONFIG_SERIAL_LITEX) += serial/litex-uart.o
+ libsbiutils-objs-$(CONFIG_SERIAL_UART8250) += serial/uart8250.o
++libsbiutils-objs-$(CONFIG_SERIAL_UARTPL011) += serial/uartpl011.o
+ libsbiutils-objs-$(CONFIG_SERIAL_XILINX_UARTLITE) += serial/xlnx-uartlite.o
+ libsbiutils-objs-$(CONFIG_SERIAL_SEMIHOSTING) += serial/semihosting.o
+--- /dev/null
++++ b/lib/utils/serial/uartpl011.c
+@@ -0,0 +1,147 @@
++/*
++ * SPDX-License-Identifier: BSD-2-Clause
++ *
++ * Copyright (c) 2024 Siflower Communications
++ *
++ * Authors:
++ *   Qingfang Deng <qingfang.deng@siflower.com.cn>
++ */
++
++#include <sbi/riscv_asm.h>
++#include <sbi/riscv_io.h>
++#include <sbi/sbi_console.h>
++#include <sbi/sbi_domain.h>
++#include <sbi_utils/serial/uartpl011.h>
++
++static volatile void *uartpl011_base;
++
++static int uart_set_baud(u32 uart_clk, u32 baudrate)
++{
++	u16 ibr, fbr;
++
++	/*create the baudrate */
++	ibr = (uart_clk / (16 * baudrate)) & 0xffff;	/*calculate the baudrate divisor and put the integer part into ibr*/
++	fbr = (((uart_clk - ibr * (16 * baudrate)) * 64) / (16 * baudrate)) & 0x3f;	/*put the fractional part into fbr*/
++
++	writel(ibr, (UART_IBRD + uartpl011_base));	/*put ibr into Uart Integer Baud Rate Register*/
++	writel(fbr, (UART_FBRD + uartpl011_base));
++
++	return 0;
++}
++
++static int uart_set_data_len(u32 data_len)
++{
++	u8 reg = 0;
++	reg = readl(UART_LCRH + uartpl011_base);
++
++	if (data_len == 5) {
++		reg &= ~((1 << 5) | (1 << 6));	/*data length = 5 */
++		writel(reg, UART_LCRH + uartpl011_base);
++	} else if (data_len == 6) {
++		reg |= (1 << 5);
++		reg &= ~(1 << 6);
++		writel(reg , UART_LCRH + uartpl011_base);	/*data length = 6 */
++	} else if (data_len == 7) {
++		reg &= ~(1 << 5);
++		reg |= (1 << 6);
++		writel(reg , UART_LCRH + uartpl011_base);	/*data length = 7 */
++	} else if (data_len == 8) {
++		reg |= ((1 << 5) | (1 << 6));
++		writel(reg , UART_LCRH + uartpl011_base);	/*data length = 8 */
++	} else {
++		return -1;
++	}
++	return 0 ;
++}
++
++static int uart_set_parity(u32 parity)
++{
++	u8 reg = 0;
++	reg = readl(UART_LCRH + uartpl011_base);
++
++	switch (parity) {
++	case ODD_PARITY:
++		reg |= (1 << 1);
++		reg &= ~(1 << 2);
++		writel(reg, UART_LCRH + uartpl011_base);	/*odd parity */
++		break;
++	case EVEN_PARITY:
++		reg |= ((1 << 1) | (1 << 2));
++		writel(reg, UART_LCRH + uartpl011_base);	/*even parity */
++		break;
++	case MASK_PARITY:
++		reg |= ((1 << 1) | (1 << 7));
++		reg &= ~(1 << 2);
++		writel(reg, UART_LCRH + uartpl011_base);	/*parity = 1 */
++		break;
++	case NULL_PARITY:
++		reg |= ((1 << 1) | (1 << 2) | (1 << 7));
++		writel(reg, UART_LCRH + uartpl011_base);	/*parity = 0 */
++		break;
++	case NO_PARITY:
++		reg &= ~(1 << 1);
++		writel(reg, UART_LCRH + uartpl011_base);	/*NO parity */
++		break;
++	default:
++		return -1;
++	}
++	return 0;
++}
++
++static int uart_init_enable(void)
++{
++	u32 ttl = 0;
++	ttl = readl(UART_CR + uartpl011_base);
++	ttl |= 0x301;
++	writel(ttl, UART_CR + uartpl011_base);
++
++	return 0;
++}
++
++static void uart_config(u32 uart_clk, u32 baudrate, u32 data_len, u32 parity, u32 stop)
++{
++	u8 reg = 0;
++
++	if (uart_clk)
++		uart_set_baud(uart_clk, baudrate);	/*create the baudrate you choose */
++	uart_set_data_len(data_len);		/*choose the data length you want */
++	uart_set_parity(parity);		/*choose the parity mode you want */
++
++	reg = readl(UART_LCRH + uartpl011_base);
++	if (stop == 1) {
++		reg &= ~(1 << 3);
++	} else {
++		reg |= (1 << 3);
++	}
++	reg |= (1 << 4);
++	writel(reg, UART_LCRH + uartpl011_base);	/*choose one stop bit and enable the FIFO */
++}
++
++static void uartpl011_putc(char ch)
++{
++	while (readl(UART_FR + uartpl011_base) & UART_FR_TXFF)
++		;
++	writel(ch, UART_DR + uartpl011_base);
++}
++
++static int uartpl011_getc(void)
++{
++	if (!(readl(UART_FR + uartpl011_base) & UART_FR_RXFE))
++		return readl(UART_DR + uartpl011_base) & 0xff;
++	return -1;
++}
++
++static struct sbi_console_device uartpl011_console = {
++	.name = "uartpl011",
++	.console_putc = uartpl011_putc,
++	.console_getc = uartpl011_getc
++};
++
++int uartpl011_init(ulong baseaddr, u32 uart_clk, u32 baudrate)
++{
++	uartpl011_base = (volatile void *)baseaddr;
++	uart_init_enable();
++	uart_config(uart_clk, baudrate, 8, 5, 1);
++	sbi_console_set_device(&uartpl011_console);
++	return 0;
++}
+--- a/platform/generic/Kconfig
++++ b/platform/generic/Kconfig
+@@ -52,6 +52,13 @@ config PLATFORM_SIFIVE_FU740
+ 	depends on FDT_RESET && FDT_I2C
+ 	default n
+ 
++config PLATFORM_SIFLOWER
++	bool "Siflower SoC support"
++	depends on FDT_IRQCHIP_PLIC
++	depends on FDT_RESET && FDT_RESET_SIFLOWER
++	select THEAD_C9XX_PMU
++	default n
++
+ config PLATFORM_SOPHGO_SG2042
+ 	bool "Sophgo sg2042 support"
+ 	select THEAD_C9XX_ERRATA
+--- /dev/null
++++ b/platform/generic/configs/siflower_defconfig
+@@ -0,0 +1,14 @@
++CONFIG_PLATFORM_SIFLOWER=y
++# CONFIG_SBI_ECALL_SUSP is not set
++# CONFIG_SBI_ECALL_CPPC is not set
++# CONFIG_SBI_ECALL_DBTR is not set
++# CONFIG_SBI_ECALL_VENDOR is not set
++# CONFIG_SBI_ECALL_MPXY is not set
++CONFIG_FDT_IPI=y
++CONFIG_FDT_IPI_MSWI=y
++CONFIG_FDT_IRQCHIP=y
++CONFIG_FDT_IRQCHIP_PLIC=y
++CONFIG_FDT_RESET=y
++CONFIG_FDT_RESET_SIFLOWER=y
++CONFIG_FDT_SERIAL=y
++CONFIG_FDT_SERIAL_UARTPL011=y
+--- a/platform/generic/objects.mk
++++ b/platform/generic/objects.mk
+@@ -31,7 +31,7 @@ else
+   # This needs to be 2MB aligned for 64-bit system
+   FW_JUMP_OFFSET=0x200000
+ endif
+-FW_JUMP_FDT_OFFSET=0x2200000
++# Do not set a default FW_JUMP_FDT_OFFSET, as we can't undef it from make vars
+ FW_PAYLOAD=y
+ ifeq ($(PLATFORM_RISCV_XLEN), 32)
+   # This needs to be 4MB aligned for 32-bit system
+@@ -40,4 +40,4 @@ else
+   # This needs to be 2MB aligned for 64-bit system
+   FW_PAYLOAD_OFFSET=0x200000
+ endif
+-FW_PAYLOAD_FDT_OFFSET=$(FW_JUMP_FDT_OFFSET)
++FW_PAYLOAD_FDT_OFFSET=0x2200000
+--- /dev/null
++++ b/platform/generic/siflower/common.c
+@@ -0,0 +1,156 @@
++/*
++ * SPDX-License-Identifier: BSD-2-Clause
++ *
++ * Copyright (c) 2024 Siflower Communications
++ *
++ * Authors:
++ *   Qingfang Deng <qingfang.deng@siflower.com.cn>
++ */
++
++#include <platform_override.h>
++#include <sbi/riscv_barrier.h>
++#include <sbi/riscv_encoding.h>
++#include <sbi/riscv_io.h>
++#include <sbi/sbi_hsm.h>
++#include <sbi/sbi_system.h>
++#include <sbi_utils/fdt/fdt_helper.h>
++#include <thead/c9xx_encoding.h>
++#include <thead/c9xx_pmu.h>
++
++/* th.dcache.ciall */
++#define dcache_clean_inv_all()	asm volatile(".4byte 0x30000b" ::: "memory")
++
++static uint64_t siflower_cpu_sysm_base;
++
++static __always_inline void siflower_hart_init(void)
++{
++	/* Enable cache coherency */
++	csr_write(THEAD_C9XX_CSR_MSMPR, 0x1);
++	csr_write(THEAD_C9XX_CSR_MHCR, 0x10011ff);
++	/* Vendor's user manual recommends the value 0x21aa10c, which enables
++	 * fence.i broadcast (bit 23 = 0) and sfence.vma broadcast (bit 21 = 0).
++	 * While this is useful for TLB/I$ flushing on all HARTs, it will cause
++	 * excessive flushing when we only want to operate on a specific HART.
++	 * Also there is no way to probe this feature, as this CSR is not
++	 * accessible in S-mode. So disable it by setting these bits.
++	 * THEADISAEE also defines the icache.ialls instruction to flush I$ on
++	 * all HARTs.
++	 */
++	csr_write(THEAD_C9XX_CSR_MHINT, 0x2baa10c);
++	/* Vendor's user manual recommends the value 0x638000, which enables
++	 * MAEE (bit 21 = 1). However we'd like to use the standard Svpbmt and
++	 * Svnapot extensions instead, so disable it.
++	 */
++	csr_write(THEAD_C9XX_CSR_MXSTATUS, 0x438000);
++	csr_write(THEAD_C9XX_CSR_MCCR2, 0xa249000a);
++}
++
++static void __attribute__((naked)) __noreturn siflower_hart_entry(void)
++{
++	extern void __noreturn _start_warm(void);
++
++	siflower_hart_init();
++	_start_warm();
++}
++
++static int siflower_hart_start(u32 hartid, ulong saddr)
++{
++	volatile void *cpu_sysm_base = (volatile void *)siflower_cpu_sysm_base;
++	saddr = (ulong)siflower_hart_entry;
++	u32 val = 0;
++
++	/* set RVBR for the given hart */
++	writel(saddr, cpu_sysm_base + 0x0c + (hartid * 8));
++	writel(saddr >> 32, cpu_sysm_base + 0x10 + (hartid * 8));
++
++	/* assert reset */
++	val = readl(cpu_sysm_base + 0x04);
++	val &= ~(1 << (16 + hartid * 4));
++	writel(val, cpu_sysm_base + 0x04);
++
++	/* deassert reset */
++	val = readl(cpu_sysm_base + 0x04);
++	val |= 1 << (16 + hartid * 4);
++	writel(val, cpu_sysm_base + 0x04);
++
++	return 0;
++}
++
++static int siflower_hart_stop(void)
++{
++	/* disable interrupt */
++	csr_clear(CSR_MSTATUS, MSTATUS_MIE);
++	csr_write(CSR_MIE, 0x0);
++
++	/* disable D-cache prefetch */
++	csr_clear(THEAD_C9XX_CSR_MHINT, 0x1 << 2);
++
++	/* clean&invalidate L1 D-cache */
++	dcache_clean_inv_all();
++
++	/* disable D-Cache */
++	csr_clear(THEAD_C9XX_CSR_MHCR, 0x1 << 1);
++
++	/* disable cache snooping */
++	csr_write(THEAD_C9XX_CSR_MSMPR, 0);
++
++	/* full memory barrier */
++	mb();
++
++	/* enter idle state */
++	while (1)
++		wfi();
++
++	return 0;
++}
++
++static const struct sbi_hsm_device siflower_hsm = {
++	.name	      = "siflower,cpu-sysm",
++	.hart_start   = siflower_hart_start,
++	.hart_stop    = siflower_hart_stop,
++};
++
++static const struct fdt_match siflower_match[] = {
++	{ .compatible = "siflower,sf21a6826", },
++	{ .compatible = "siflower,sf21h8898", },
++	{ .compatible = "siflower,sf23a2892", },
++	{}
++};
++
++static void siflower_fw_init(const void *fdt, const struct fdt_match *match)
++{
++	siflower_hart_init();
++}
++
++static int siflower_hsm_init(void *fdt)
++{
++	int rc;
++
++	rc = fdt_parse_compat_addr(fdt, &siflower_cpu_sysm_base,
++				   siflower_hsm.name);
++	if (!rc)
++		sbi_hsm_set_device(&siflower_hsm);
++
++	return rc;
++}
++
++static int siflower_final_init(bool cold_boot, void *fdt, const struct fdt_match *match)
++{
++	if (cold_boot)
++		return siflower_hsm_init(fdt);
++
++	return 0;
++}
++
++static int siflower_extensions_init(const struct fdt_match *match, struct sbi_hart_features *hfeatures)
++{
++	thead_c9xx_register_pmu_device();
++	return 0;
++}
++
++const struct platform_override siflower_platform = {
++	.match_table		= siflower_match,
++	.fw_init		= siflower_fw_init,
++	.final_init		= siflower_final_init,
++	.extensions_init	= siflower_extensions_init,
++};
+--- /dev/null
++++ b/platform/generic/siflower/objects.mk
+@@ -0,0 +1,6 @@
++#
++# SPDX-License-Identifier: BSD-2-Clause
++#
++
++carray-platform_override_modules-$(CONFIG_PLATFORM_SIFLOWER) += siflower_platform
++platform-objs-$(CONFIG_PLATFORM_SIFLOWER) += siflower/common.o

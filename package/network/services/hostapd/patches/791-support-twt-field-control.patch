@@ -1,0 +1,31 @@
+--- a/src/ap/ieee802_11_he.c
++++ b/src/ap/ieee802_11_he.c
+@@ -152,6 +152,16 @@ u8 * hostapd_eid_he_capab(struct hostapd
+ 		cap->he_phy_capab_info[HE_PHYCAP_MU_BEAMFORMER_CAPAB_IDX] &=
+ 			~HE_PHYCAP_MU_BEAMFORMER_CAPAB;
+ 
++	if (hapd->iface->conf->he_op.he_twt_responder)
++		cap->he_mac_capab_info[HE_MACCAP_TWT_IDX] |= HE_MACCAP_TWT_RESPONDER;
++	else
++		cap->he_mac_capab_info[HE_MACCAP_TWT_IDX] &= ~HE_MACCAP_TWT_RESPONDER;
++
++	if (hapd->iface->conf->he_op.he_twt_required)
++		cap->he_mac_capab_info[HE_MACCAP_TWT_IDX] |= HE_MACCAP_TWT_REQUESTER;
++	else
++		cap->he_mac_capab_info[HE_MACCAP_TWT_IDX] &= ~HE_MACCAP_TWT_REQUESTER;
++
+ 	cap->he_phy_capab_info[HE_PHYCAP_CHANNEL_WIDTH_SET_IDX] &=
+ 		he_oper_chwidth;
+ 
+--- a/src/common/ieee802_11_defs.h
++++ b/src/common/ieee802_11_defs.h
+@@ -2258,7 +2258,9 @@ struct ieee80211_spatial_reuse {
+ 
+ /* HE Capabilities Information defines */
+ 
++#define HE_MACCAP_TWT_REQUESTER			((u8) BIT(1))
+ #define HE_MACCAP_TWT_RESPONDER			((u8) BIT(2))
++#define HE_MACCAP_TWT_IDX					0
+ 
+ #define HE_PHYCAP_CHANNEL_WIDTH_SET_IDX		0
+ #define HE_PHYCAP_CHANNEL_WIDTH_MASK		((u8) (BIT(1) | BIT(2) | \

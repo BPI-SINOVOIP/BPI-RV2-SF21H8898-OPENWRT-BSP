@@ -1,0 +1,66 @@
+EN8811H PHY Linux Driver Install
+
+1. Copy air_en8811h_main.c, air_en8811h_api.c, air_en8811h_api.h and air_en8811h.h to /drivers/net/phy/
+
+2. Add below message to the Kconfig
+	config AIROHA_EN8811H_PHY
+		tristate "Drivers for Airoha EN8811H 2.5G Gigabit PHY"
+		---help---
+		  Currently supports the Airoha EN8811H PHY.
+
+	config AIROHA_EN8811H_PHY_DEBUGFS
+		bool "EN8811H debugfs support"
+		depends on AIROHA_EN8811H_PHY
+		---help---
+		  Enable creation of debugfs files for the EN8811H drivers.
+
+3. Add below message to the Makefile
+	air_en8811h-y := air_en8811h_main.o air_en8811h_api.o
+	obj-$(CONFIG_AIROHA_EN8811H_PHY)	+= air_en8811h.o
+
+4. The following dts configuration is only for example. Please check your platform of DTS first.
+    mdio: mdio-bus {
+        #address-cells = <1>;
+        #size-cells = <0>;
+		...
+		...
+		
+        phy5: phy@5 {
+			compatible = "ethernet-phy-id03a2.a411";
+			reg = <15>;
+			phy-mode = "2500base-x";
+			full-duplex;
+			pause;
+			airoha,polarity = <1>;
+			airoha,surge = <0>;
+			airoha,cko-en = <0>;
+		};
+	...
+	...
+	}
+
+Note:
+* SerDes polarity setting could be configured in dts. Please refer to the following description.
+Tx Reverse, Rx Normal:
+		airoha,polarity = <0>;
+Tx Normal, Rx Normal:
+		airoha,polarity = <1>;
+Tx Reverse, Rx Reverse:
+		airoha,polarity = <2>;
+Tx Normal, Rx Reverse:
+		airoha,polarity = <3>;
+
+* Surge protection setting could be configured in dts. Please refer to the following description.
+Surge protection - 0R
+airoha,surge = <0>;
+Surge protection - 5R
+airoha,surge = <1>;
+
+* Co-clock output setting could be configured in dts. Please refer to the following description.
+Co-clock output - Disabled
+airoha,cko-en = <0>;
+Co-clock output - Enabled 
+airoha,cko-en = <1>;
+
+
+5. For more information, please refer to Airoha_EN8811_Programming Guide

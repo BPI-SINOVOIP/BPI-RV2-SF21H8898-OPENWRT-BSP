@@ -1,0 +1,83 @@
+--- a/src/ap/ubus.c
++++ b/src/ap/ubus.c
+@@ -691,6 +691,16 @@ hostapd_bss_wps_cancel(struct ubus_conte
+ #endif /* CONFIG_WPS */
+ 
+ static int
++hostapd_sta_deauth(struct ubus_context *ctx, struct ubus_object *obj,
++			struct ubus_request_data *req, const char *method,
++			struct blob_attr *msg)
++{
++	struct hostapd_data *hapd = container_of(obj, struct hostapd_data, ubus.obj);
++	hostapd_sta_deauth_all(hapd);
++	return 0;
++}
++
++static int
+ hostapd_bss_update_beacon(struct ubus_context *ctx, struct ubus_object *obj,
+ 			struct ubus_request_data *req, const char *method,
+ 			struct blob_attr *msg)
+@@ -1838,6 +1848,7 @@ static const struct ubus_method bss_meth
+ 	UBUS_METHOD_NOARG("wps_status", hostapd_bss_wps_status),
+ 	UBUS_METHOD_NOARG("wps_cancel", hostapd_bss_wps_cancel),
+ #endif
++	UBUS_METHOD_NOARG("deauth", hostapd_sta_deauth),
+ 	UBUS_METHOD_NOARG("update_beacon", hostapd_bss_update_beacon),
+ 	UBUS_METHOD_NOARG("get_features", hostapd_bss_get_features),
+ #ifdef NEED_AP_MLME
+--- a/src/ap/hostapd.c
++++ b/src/ap/hostapd.c
+@@ -55,7 +55,7 @@
+ #include "hs20.h"
+ #include "airtime_policy.h"
+ #include "wpa_auth_kay.h"
+-
++#include "preauth_auth.h"
+ 
+ static int hostapd_flush_old_stations(struct hostapd_data *hapd, u16 reason);
+ #ifdef CONFIG_WEP
+@@ -168,6 +168,7 @@ static void hostapd_reload_bss(struct ho
+ 			wpa_printf(MSG_ERROR, "Failed to configure WPA IE for "
+ 				   "the kernel driver.");
+ 	} else if (hapd->wpa_auth) {
++		rsn_preauth_iface_deinit(hapd);
+ 		wpa_deinit(hapd->wpa_auth);
+ 		hapd->wpa_auth = NULL;
+ 		hostapd_set_privacy(hapd, 0);
+@@ -213,6 +214,26 @@ static void hostapd_clear_old(struct hos
+ 	}
+ }
+ 
++/* deauth all stations connected */
++void hostapd_sta_deauth_all(struct hostapd_data *hapd)
++{
++	struct hostapd_iface *iface = hapd->iface;
++	size_t j;
++
++	for (j = 0; j < iface->num_bss; j++) {
++		hostapd_flush_old_stations(iface->bss[j],
++					   WLAN_REASON_PREV_AUTH_NOT_VALID);
++#ifdef CONFIG_WEP
++		hostapd_broadcast_wep_clear(iface->bss[j]);
++#endif /* CONFIG_WEP */
++
++#ifndef CONFIG_NO_RADIUS
++		/* TODO: update dynamic data based on changed configuration
++		 * items (e.g., open/close sockets, etc.) */
++		radius_client_flush(iface->bss[j]->radius, 0);
++#endif /* CONFIG_NO_RADIUS */
++	}
++}
+ 
+ static int hostapd_iface_conf_changed(struct hostapd_config *newconf,
+ 				      struct hostapd_config *oldconf)
+--- a/src/ap/hostapd.h
++++ b/src/ap/hostapd.h
+@@ -667,6 +667,7 @@ void
+ hostapd_switch_channel_fallback(struct hostapd_iface *iface,
+ 				const struct hostapd_freq_params *freq_params);
+ void hostapd_cleanup_cs_params(struct hostapd_data *hapd);
++void hostapd_sta_deauth_all(struct hostapd_data *hapd);
+ void hostapd_periodic_iface(struct hostapd_iface *iface);
+ int hostapd_owe_trans_get_info(struct hostapd_data *hapd);
+ void hostapd_ocv_check_csa_sa_query(void *eloop_ctx, void *timeout_ctx);

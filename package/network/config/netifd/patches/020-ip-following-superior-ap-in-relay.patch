@@ -1,0 +1,87 @@
+Index: netifd-2022-02-20-136006b8/device.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/device.c
++++ netifd-2022-02-20-136006b8/device.c
+@@ -815,6 +815,7 @@ void device_set_link(struct device *dev,
+ 	if (!state)
+ 		dev->auth_status = false;
+ 	device_broadcast_event(dev, state ? DEV_EVENT_LINK_UP : DEV_EVENT_LINK_DOWN);
++	wireless_sta_proto_renew(dev->ifname, state);
+ }
+ 
+ void device_set_ifindex(struct device *dev, int ifindex)
+Index: netifd-2022-02-20-136006b8/wireless.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/wireless.c
++++ netifd-2022-02-20-136006b8/wireless.c
+@@ -32,6 +32,7 @@
+ #include "wireless.h"
+ #include "handler.h"
+ #include "ubus.h"
++#include "proto.h"
+ 
+ #define WIRELESS_SETUP_RETRY	3
+ 
+@@ -1959,3 +1960,51 @@ void wireless_device_hotplug_event(const
+ 		}
+ 	}
+ }
++
++/**
++ * RM16783 Modifying the superior network segment in relay mode, and the subordinate devices cannot obtain the IP address.
++ * reload_flag == false The first time the STA interface is started, the network will not be restarted.
++ * reload_flag == true  If there are subsequent down/up operations on the STA interface, the network will be restarted.
++ */
++static bool reload_flag = false;
++
++void wireless_sta_proto_renew(char *ifname, bool status)
++{
++    struct wireless_interface *vif;
++    struct wireless_device *wdev;
++    struct interface *iface;
++    struct blob_attr *cur;
++    const char *network;
++    int rem;
++
++    if (!status)
++        return;
++
++    vlist_for_each_element(&wireless_devices, wdev, node) {
++        vif = vlist_find(&wdev->interfaces, ifname, vif, node);
++        if (vif)
++            break;
++    }
++
++    if (!vif)
++        return;
++
++    if (vif->ap_mode)
++        return;
++
++    blobmsg_for_each_attr(cur, vif->network, rem) {
++        network = blobmsg_data(cur);
++
++        iface = vlist_find(&interfaces, network, iface, node);
++        if (iface)
++            break;
++    }
++
++    if (iface) {
++        interface_proto_event(iface->proto, PROTO_CMD_RENEW, false);
++        if (reload_flag)
++            system("/etc/init.d/network restart &");
++        else
++            reload_flag = true;
++    }
++}
+Index: netifd-2022-02-20-136006b8/wireless.h
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/wireless.h
++++ netifd-2022-02-20-136006b8/wireless.h
+@@ -179,5 +179,6 @@ int wireless_device_notify(struct wirele
+ void wireless_start_pending(void);
+ void wireless_init(void);
+ void wireless_device_hotplug_event(const char *name, bool add);
++void wireless_sta_proto_renew(char *ifname, bool status);
+ 
+ #endif

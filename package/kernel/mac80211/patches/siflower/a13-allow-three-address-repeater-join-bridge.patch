@@ -1,0 +1,27 @@
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1084,6 +1084,7 @@ int cfg80211_change_iface(struct cfg8021
+ 	if (!err) {
+ 		dev->priv_flags &= ~IFF_DONT_BRIDGE;
+ 		switch (ntype) {
++/* Allow three - address interfaces to join the bridge
+ 		case NL80211_IFTYPE_STATION:
+ 			if (dev->ieee80211_ptr->use_4addr)
+ 				break;
+@@ -1093,6 +1094,7 @@ int cfg80211_change_iface(struct cfg8021
+ 		case NL80211_IFTYPE_ADHOC:
+ 			dev->priv_flags |= IFF_DONT_BRIDGE;
+ 			break;
++*/
+ 		case NL80211_IFTYPE_P2P_GO:
+ 		case NL80211_IFTYPE_AP:
+ 		case NL80211_IFTYPE_AP_VLAN:
+@@ -1111,6 +1113,8 @@ int cfg80211_change_iface(struct cfg8021
+ 		case NL80211_IFTYPE_NAN:
+ 			WARN_ON(1);
+ 			break;
++		default:
++			break;
+ 		}
+ 	}
+ 

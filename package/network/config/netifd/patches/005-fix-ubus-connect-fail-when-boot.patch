@@ -1,0 +1,35 @@
+Index: netifd-2022-02-20-136006b8/ubus.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/ubus.c
++++ netifd-2022-02-20-136006b8/ubus.c
+@@ -1104,12 +1104,14 @@ static struct ubus_object iface_object =
+ 	.n_methods = ARRAY_SIZE(iface_object_methods),
+ };
+ 
+-static void netifd_add_object(struct ubus_object *obj)
++static int netifd_add_object(struct ubus_object *obj)
+ {
+ 	int ret = ubus_add_object(ubus_ctx, obj);
+ 
+-	if (ret != 0)
+-		fprintf(stderr, "Failed to publish object '%s': %s\n", obj->name, ubus_strerror(ret));
++	if (ret != 0){
++                DPRINTF("Failed to publish ubus object '%s': %s\n", obj->name, ubus_strerror(ret));
++        }
++        return ret;
+ }
+ 
+ static const struct blobmsg_policy iface_policy = {
+@@ -1365,9 +1367,9 @@ netifd_ubus_init(const char *path)
+ 	ubus_ctx->connection_lost = netifd_ubus_connection_lost;
+ 	netifd_ubus_add_fd();
+ 
+-	netifd_add_object(&main_object);
+-	netifd_add_object(&dev_object);
+-	netifd_add_object(&wireless_object);
++	if(netifd_add_object(&main_object)) return -1;
++        if(netifd_add_object(&dev_object)) return -1;
++        if(netifd_add_object(&wireless_object)) return -1;
+ 	netifd_add_iface_object();
+ 
+ 	return 0;

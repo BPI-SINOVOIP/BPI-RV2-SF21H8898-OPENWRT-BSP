@@ -1,0 +1,125 @@
+#***********************************************************
+#
+# Makefile
+#
+#***********************************************************
+ifeq (env.h, $(wildcard env.h))
+include env.h
+endif
+include $(MAKE_PATH)/env/make.env
+include $(MAKE_PATH)/make.path
+include $(MAKE_PATH)/make.rule
+include $(MAKE_PATH)/make.cfg
+
+ifeq ($(VTY_CMD_LINE), YES)
+TARGET_SDK = sdk
+else
+ifeq ($(OS_FreeRTOS), YES)
+TARGET_SDK = libsdk.a
+else
+CFLAGS += -fpic
+TARGET_SDK = libsdk.so
+endif
+endif
+
+CFLAGS += ${SDK_INCLUDES}
+
+.c.o:
+	echo $(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(SDK_COMPILATION_SWITCHES) -c $< -o $@
+
+all: $(TARGET_SDK)
+
+sdk:$(SDK_SOURCE_OBJECTS)
+	@echo $@
+	echo $(CC) $(CFLAGS) -o $@ $^ ${CLI_LIB}
+	$(CC) $(CFLAGS) -o $@ $^ ${CLI_LIB}
+	$(STRIP) $@
+	cp $@ ../release/
+	$(OBJSIZE) -d $@
+
+libsdk.a:$(SDK_SOURCE_OBJECTS)
+	@echo $@
+	echo $(AR) -rcs $@ $^ 
+	$(AR) -rcs $@ $^		
+
+libsdk.so:$(SDK_SOURCE_OBJECTS)
+	@echo $@
+	$(CC) $(CFLAGS) $(SOFLAGS) -o $@ $^
+	$(STRIP) $@
+	$(OBJSIZE) -d $@
+
+clean:
+	-rm -f $(CORE_CMD_CLI_PATH)/*.o
+	-rm -f $(CORE_CMD_PATH)/*.o
+	-rm -f $(CORE_CMD_CLI_CMD_PATH)/*.o
+	-rm -f $(CORE_CMD_SCRIPT_PATH)/*.o
+	-rm -f $(CORE_CAL_PATH)/*.o
+	-rm -f $(CORE_FAL_PATH)/*.o
+	-rm -f $(CORE_HAL_PATH)/*.o
+	-rm -f $(CORE_FAL_PROJECT_PATH)/*.o
+	-rm -f $(CORE_API_PATH)/*.o
+	-rm -f $(CORE_SW_CTRL_PATH)/*.o
+	-rm -f $(CORE_SW_CTRL_PATH)/ctrlif/*.o
+	-rm -f $(CORE_SW_CTRL_PATH)/uart/*.o
+	-rm -f $(CORE_SW_CTRL_PATH)/mem/*.o
+	-rm -f $(CORE_CHIP_DEF_PATH)/*.o
+	-rm -f $(CORE_MAC_DRV_PATH)/*.o
+	-rm -f $(CORE_PHY_DRV_PATH)/*.o
+	-rm -f $(PKTGEN_PATH)/*.o
+	-rm -f $(COMMON_PATH)/*.o
+	-rm -f $(COMMON_PATH_SRC)/*.o
+	-rm -f $(OSAL_PATH)/*.o
+	-rm -f $(OUTPT_PATH)/sdk_cmodel
+	-rm -f $(TARGET_SDK)
+	-rm -f YT.*
+	-rm -f $(CORE_INTERNAL_DEBUG_PATH)/*.o
+ifeq ($(INTERNAL_MSG_DEBUG), YES)
+	-rm -f $(CORE_INTERNAL_DEBUG_PATH)/shadow_msg/*.o
+endif
+ifeq ($(GCOV), YES)
+	-rm -f $(CORE_CMD_CLI_PATH)/*.gcda
+	-rm -f $(CORE_CMD_CLI_PATH)/*.gcno
+	-rm -f $(CORE_CMD_PATH)/*.gcda
+	-rm -f $(CORE_CMD_PATH)/*.gcno
+	-rm -f $(CORE_CMD_CLI_CMD_PATH)/*.gcda
+	-rm -f $(CORE_CMD_CLI_CMD_PATH)/*.gcno
+	-rm -f $(CORE_CMD_SCRIPT_PATH)/*.gcda
+	-rm -f $(CORE_CMD_SCRIPT_PATH)/*.gcno
+	-rm -f $(CORE_CAL_PATH)/*.gcda
+	-rm -f $(CORE_CAL_PATH)/*.gcno
+	-rm -f $(CORE_FAL_PATH)/*.gcda
+	-rm -f $(CORE_FAL_PATH)/*.gcno
+	-rm -f $(CORE_HAL_PATH)/*.gcda
+	-rm -f $(CORE_HAL_PATH)/*.gcno
+	-rm -f $(CORE_FAL_PROJECT_PATH)/*.gcda
+	-rm -f $(CORE_FAL_PROJECT_PATH)/*.gcno
+	-rm -f $(CORE_API_PATH)/*.gcda
+	-rm -f $(CORE_API_PATH)/*.gcno
+	-rm -f $(CORE_SW_CTRL_PATH)/*.gcda
+	-rm -f $(CORE_SW_CTRL_PATH)/*.gcno
+	-rm -f $(CORE_SW_CTRL_PATH)/ctrlif/*.gcda
+	-rm -f $(CORE_SW_CTRL_PATH)/ctrlif/*.gcno
+	-rm -f $(CORE_SW_CTRL_PATH)/uart/*.gcda
+	-rm -f $(CORE_SW_CTRL_PATH)/uart/*.gcno
+	-rm -f $(CORE_SW_CTRL_PATH)/mem/*.gcda
+	-rm -f $(CORE_SW_CTRL_PATH)/mem/*.gcno
+	-rm -f $(CORE_CHIP_DEF_PATH)/*.gcda
+	-rm -f $(CORE_CHIP_DEF_PATH)/*.gcno
+	-rm -f $(CORE_MAC_DRV_PATH)/*.gcda
+	-rm -f $(CORE_MAC_DRV_PATH)/*.gcno
+	-rm -f $(CORE_PHY_DRV_PATH)/*.gcda
+	-rm -f $(CORE_PHY_DRV_PATH)/*.gcno
+	-rm -f $(PKTGEN_PATH)/*.gcda
+	-rm -f $(PKTGEN_PATH)/*.gcno
+	-rm -f $(COMMON_PATH_SRC)/*.gcda
+	-rm -f $(COMMON_PATH_SRC)/*.gcno
+	-rm -f $(OSAL_PATH)/*.gcda
+	-rm -f $(OSAL_PATH)/*.gcno
+	-rm -f $(PKTGEN_PATH)/*.gcda
+	-rm -f $(PKTGEN_PATH)/*.gcno
+	-rm -f $(CORE_INTERNAL_DEBUG_PATH)/*.gcda
+	-rm -f $(CORE_INTERNAL_DEBUG_PATH)/*.gcno
+endif
+
+

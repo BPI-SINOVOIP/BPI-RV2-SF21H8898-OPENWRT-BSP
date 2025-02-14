@@ -1,0 +1,14 @@
+--- a/wpa_supplicant/scan.c
++++ b/wpa_supplicant/scan.c
+@@ -216,6 +216,11 @@ static void wpas_trigger_scan_cb(struct
+ 			   "Request driver to clear scan cache due to local BSS flush");
+ 		params->only_new_results = 1;
+ 	}
++
++    if (wpa_s->conf->ssid->bssid) {
++        os_memcpy(wpa_s->next_scan_bssid, wpa_s->conf->ssid->bssid, ETH_ALEN);
++    }
++
+ 	ret = wpa_drv_scan(wpa_s, params);
+ 	/*
+ 	 * Store the obtained vendor scan cookie (if any) in wpa_s context.

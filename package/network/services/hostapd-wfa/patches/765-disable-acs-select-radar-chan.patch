@@ -1,0 +1,30 @@
+Index: hostapd-2022-01-16-cff80b4f/src/ap/acs.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/acs.c
++++ hostapd-2022-01-16-cff80b4f/src/ap/acs.c
+@@ -612,6 +612,15 @@ acs_find_chan(struct hostapd_iface *ifac
+ 	return NULL;
+ }
+ 
++static int acs_radar_chan(const struct hostapd_channel_data *chan)
++{
++	const int allowed[] = { 52, 56, 60, 64 };
++	unsigned int i;
++	for (i = 0; i < ARRAY_SIZE(allowed); i++)
++		if (chan->chan == allowed[i])
++			return 1;
++	return 0;
++}
+ 
+ static int is_24ghz_mode(enum hostapd_hw_mode mode)
+ {
+@@ -669,6 +678,9 @@ acs_find_ideal_chan_mode(struct hostapd_
+ 		if (!chan_pri_allowed(chan))
+ 			continue;
+ 
++		if (acs_radar_chan(chan))
++			continue;
++
+ 		if (!is_in_chanlist(iface, chan))
+ 			continue;
+ 

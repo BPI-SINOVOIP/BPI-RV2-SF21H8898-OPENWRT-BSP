@@ -1,0 +1,11 @@
+--- a/src/ap/ap_config.c
++++ b/src/ap/ap_config.c
+@@ -195,7 +195,7 @@ struct hostapd_config * hostapd_config_d
+ 	const struct hostapd_tx_queue_params txq_vi =
+ 		{ 1, (ecw2cw(aCWmin) + 1) / 2 - 1, ecw2cw(aCWmin), 30};
+ 	const struct hostapd_tx_queue_params txq_vo =
+-		{ 1, (ecw2cw(aCWmin) + 1) / 4 - 1,
++		{ 2, (ecw2cw(aCWmin) + 1) / 4 - 1,
+ 		  (ecw2cw(aCWmin) + 1) / 2 - 1, 15};
+ 
+ #undef ecw2cw

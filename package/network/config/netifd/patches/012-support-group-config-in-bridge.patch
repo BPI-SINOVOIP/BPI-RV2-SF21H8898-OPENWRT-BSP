@@ -1,0 +1,230 @@
+Index: netifd-2022-02-20-136006b8/bridge.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/bridge.c
++++ netifd-2022-02-20-136006b8/bridge.c
+@@ -734,14 +734,26 @@ bridge_member_update(struct vlist_tree *
+ 
+ 
+ static void
+-bridge_add_member(struct bridge_state *bst, const char *name)
++bridge_add_member(struct bridge_state *bst, const char *name, bool inherit)
+ {
+ 	struct device *dev;
++	struct device *br_dev = &(bst->dev);	
+ 
+ 	dev = device_get(name, true);
+ 	if (!dev)
+ 		return;
+-
++	
++	if(inherit){
++                //inherit device info from bridge device
++                if(br_dev->settings.flags & DEV_OPT_GROUP){
++                        dev->settings.flags |= DEV_OPT_GROUP;
++                        dev->settings.group = br_dev->settings.group;
++                }
++                if(br_dev->settings.flags & DEV_OPT_BRINPUT_DISABLE){
++                        dev->settings.flags |= DEV_OPT_BRINPUT_DISABLE;
++                        dev->settings.disable_input = br_dev->settings.disable_input;
++                }
++        }	
+ 	bridge_create_member(bst, name, dev, false);
+ }
+ 
+@@ -1017,13 +1029,13 @@ bridge_config_init(struct device *dev)
+ 	vlist_update(&bst->members);
+ 	if (bst->ports) {
+ 		blobmsg_for_each_attr(cur, bst->ports, rem) {
+-			bridge_add_member(bst, blobmsg_data(cur));
++			bridge_add_member(bst, blobmsg_data(cur), true);
+ 		}
+ 	}
+ 
+ 	vlist_for_each_element(&bst->dev.vlans, vlan, node)
+ 		for (i = 0; i < vlan->n_ports; i++)
+-			bridge_add_member(bst, vlan->ports[i].ifname);
++			bridge_add_member(bst, vlan->ports[i].ifname, true);
+ 
+ 	vlist_flush(&bst->members);
+ 	bridge_check_retry(bst);
+Index: netifd-2022-02-20-136006b8/device.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/device.c
++++ netifd-2022-02-20-136006b8/device.c
+@@ -64,6 +64,8 @@ static const struct blobmsg_policy dev_a
+ 	[DEV_ATTR_AUTH] = { .name = "auth", .type = BLOBMSG_TYPE_BOOL },
+ 	[DEV_ATTR_SPEED] = { .name = "speed", .type = BLOBMSG_TYPE_INT32 },
+ 	[DEV_ATTR_DUPLEX] = { .name = "duplex", .type = BLOBMSG_TYPE_BOOL },
++	[DEV_ATTR_GROUP] = { .name = "group", .type = BLOBMSG_TYPE_INT32 },
++        [DEV_ATTR_BRINPUT_DISABLE] = { .name = "disable_input", .type = BLOBMSG_TYPE_BOOL },
+ };
+ 
+ const struct uci_blob_param_list device_attr_list = {
+@@ -282,6 +284,8 @@ device_merge_settings(struct device *dev
+ 	n->speed = s->flags & DEV_OPT_SPEED ? s->speed : os->speed;
+ 	n->duplex = s->flags & DEV_OPT_DUPLEX ? s->duplex : os->duplex;
+ 	n->flags = s->flags | os->flags | os->valid_flags;
++	n->group = s->group;
++        n->disable_input = s->disable_input;
+ }
+ 
+ void
+@@ -465,6 +469,16 @@ device_init_settings(struct device *dev,
+ 		s->flags |= DEV_OPT_DUPLEX;
+ 	}
+ 
++	if ((cur = tb[DEV_ATTR_GROUP])) {
++                s->group = blobmsg_get_u32(cur);
++                s->flags |= DEV_OPT_GROUP;
++        }
++ 
++        if ((cur = tb[DEV_ATTR_BRINPUT_DISABLE])) {
++                s->disable_input = blobmsg_get_bool(cur);
++                s->flags |= DEV_OPT_BRINPUT_DISABLE;
++        }
++
+ 	device_set_disabled(dev, disabled);
+ }
+ 
+@@ -1218,6 +1232,10 @@ device_dump_status(struct blob_buf *b, s
+ 			blobmsg_add_u8(b, "arp_accept", st.arp_accept);
+ 		if (st.flags & DEV_OPT_AUTH)
+ 			blobmsg_add_u8(b, "auth", st.auth);
++		if (st.flags & DEV_OPT_GROUP)
++                        blobmsg_add_u32(b, "group", st.group);
++                if (st.flags & DEV_OPT_BRINPUT_DISABLE)
++                        blobmsg_add_u32(b, "disableinput", st.disable_input);
+ 	}
+ 
+ 	s = blobmsg_open_table(b, "statistics");
+Index: netifd-2022-02-20-136006b8/device.h
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/device.h
++++ netifd-2022-02-20-136006b8/device.h
+@@ -62,6 +62,8 @@ enum {
+ 	DEV_ATTR_AUTH,
+ 	DEV_ATTR_SPEED,
+ 	DEV_ATTR_DUPLEX,
++	DEV_ATTR_GROUP,
++        DEV_ATTR_BRINPUT_DISABLE,
+ 	__DEV_ATTR_MAX,
+ };
+ 
+@@ -126,6 +128,8 @@ enum {
+ 	DEV_OPT_ARP_ACCEPT		= (1ULL << 29),
+ 	DEV_OPT_SPEED			= (1ULL << 30),
+ 	DEV_OPT_DUPLEX			= (1ULL << 31),
++	DEV_OPT_GROUP                   = (1ULL << 32),
++        DEV_OPT_BRINPUT_DISABLE         = (1ULL << 33),
+ };
+ 
+ /* events broadcasted to all users of a device */
+@@ -203,6 +207,8 @@ struct device_settings {
+ 	bool auth;
+ 	unsigned int speed;
+ 	bool duplex;
++	unsigned int group;
++         bool disable_input;
+ };
+ 
+ /*
+Index: netifd-2022-02-20-136006b8/system-linux.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/system-linux.c
++++ netifd-2022-02-20-136006b8/system-linux.c
+@@ -450,6 +450,18 @@ static void system_set_dadtransmits(stru
+ 	system_set_dev_sysctl("ipv6/conf", "dad_transmits", dev->ifname, val);
+ }
+ 
++static void system_bridge_set_group(struct device *dev, const char *val)
++{
++//      system_set_dev_sysctl("/sys/class/net/%s/brport/group", dev->ifname, val);
++	system_set_dev_sysctl(dev->ifname, "group", "brport", val);
++}
++
++static void system_bridge_set_disable_input(struct device *dev, const char *val)
++{
++//      system_set_dev_sysctl("/sys/class/net/%s/brport/disableinput", dev->ifname, val);
++	system_set_dev_sysctl("dev->ifname", "disableinput", "brport", val);
++}
++
+ static void system_set_sendredirects(struct device *dev, const char *val)
+ {
+ 	system_set_dev_sysctl("ipv4/conf", "send_redirects", dev->ifname, val);
+@@ -1113,6 +1125,15 @@ retry:
+ 	if (dev->settings.flags & DEV_OPT_ISOLATE &&
+ 	    dev->settings.isolate)
+ 		system_bridge_set_isolated(dev, "1");
++	
++	if (dev->settings.flags & DEV_OPT_GROUP) {
++                snprintf(buf, sizeof(buf), "%i", dev->settings.group);
++                system_bridge_set_group(dev, buf);
++        }
++ 
++        if (dev->settings.flags & DEV_OPT_BRINPUT_DISABLE) {
++                system_bridge_set_disable_input(dev, dev->settings.disable_input ? "1" : "0");
++        }
+ 
+ 	if (dev->bpdu_filter)
+ 		system_bridge_set_bpdu_filter(dev, dev->bpdu_filter ? "1" : "0");
+Index: netifd-2022-02-20-136006b8/wireless.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/wireless.c
++++ netifd-2022-02-20-136006b8/wireless.c
+@@ -64,6 +64,8 @@ enum {
+ 	VIF_ATTR_NETWORK,
+ 	VIF_ATTR_ISOLATE,
+ 	VIF_ATTR_MODE,
++	VIF_ATTR_GROUP,
++	VIF_ATTR_BRINPUT_DISABLE,
+ 	VIF_ATTR_PROXYARP,
+ 	__VIF_ATTR_MAX,
+ };
+@@ -73,6 +75,8 @@ static const struct blobmsg_policy vif_p
+ 	[VIF_ATTR_NETWORK] = { .name = "network", .type = BLOBMSG_TYPE_ARRAY },
+ 	[VIF_ATTR_ISOLATE] = { .name = "isolate", .type = BLOBMSG_TYPE_BOOL },
+ 	[VIF_ATTR_MODE] = { .name = "mode", .type = BLOBMSG_TYPE_STRING },
++	[VIF_ATTR_GROUP] = { .name = "group", .type = BLOBMSG_TYPE_INT32 },
++        [VIF_ATTR_BRINPUT_DISABLE] = { .name = "disable_input", .type = BLOBMSG_TYPE_BOOL },
+ 	[VIF_ATTR_PROXYARP] = { .name = "proxy_arp", .type = BLOBMSG_TYPE_BOOL },
+ };
+ 
+@@ -336,6 +340,10 @@ static void wireless_interface_handle_li
+ 			dev->wireless_proxyarp = vif->proxyarp;
+ 			dev->wireless = true;
+ 			dev->wireless_ap = vif->ap_mode;
++			dev->settings.group = vif->group;
++                        dev->settings.disable_input = vif->disable_input;
++                        dev->settings.flags |= DEV_OPT_GROUP;
++                        dev->settings.flags |= DEV_OPT_BRINPUT_DISABLE;
+ 			dev->bpdu_filter = dev->wireless_ap;
+ 		}
+ 	}
+@@ -805,6 +813,14 @@ wireless_interface_init_config(struct wi
+ 
+ 	cur = tb[VIF_ATTR_ISOLATE];
+ 	vif->isolate = vif->ap_mode && cur && blobmsg_get_bool(cur);
++	
++	cur = tb[VIF_ATTR_GROUP];
++        if (cur)
++                vif->group = blobmsg_get_u32(cur);
++ 
++        cur = tb[VIF_ATTR_BRINPUT_DISABLE];
++        if (cur)
++                vif->disable_input = blobmsg_get_bool(cur);
+ 
+ 	cur = tb[VIF_ATTR_PROXYARP];
+ 	vif->proxyarp = vif->ap_mode && cur && blobmsg_get_bool(cur);
+Index: netifd-2022-02-20-136006b8/wireless.h
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/wireless.h
++++ netifd-2022-02-20-136006b8/wireless.h
+@@ -91,6 +91,8 @@ struct wireless_interface {
+ 	bool proxyarp;
+ 	bool isolate;
+ 	bool ap_mode;
++	unsigned int group;
++	bool disable_input;
+ };
+ 
+ struct wireless_vlan {

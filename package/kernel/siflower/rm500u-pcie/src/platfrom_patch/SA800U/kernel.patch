@@ -1,0 +1,142 @@
+diff --git a/kernel/msm-4.9/arch/arm64/boot/dts/qcom/sdm845-pcie.dtsi b/kernel/msm-4.9/arch/arm64/boot/dts/qcom/sdm845-pcie.dtsi
+index f504f2dc7f..f16ce6c1fc 100755
+--- a/kernel/msm-4.9/arch/arm64/boot/dts/qcom/sdm845-pcie.dtsi
++++ b/kernel/msm-4.9/arch/arm64/boot/dts/qcom/sdm845-pcie.dtsi
+@@ -197,8 +197,11 @@
+ 		qcom,vreg-cx-voltage-level = <RPMH_REGULATOR_LEVEL_MAX
+ 						RPMH_REGULATOR_LEVEL_SVS 0>;
+ 
+-		qcom,l1-supported;
+-		qcom,l1ss-supported;
++        //qcom,l1-supported;
++        //qcom,l1ss-supported;
++        qcom,no-l1-supported;
++        qcom,no-l1ss-supported;
++
+ 		qcom,aux-clk-sync;
+ 
+ 		qcom,ep-latency = <10>;
+diff --git a/kernel/msm-4.9/arch/arm64/boot/dts/qcom/sdm845.dtsi b/kernel/msm-4.9/arch/arm64/boot/dts/qcom/sdm845.dtsi
+index 9696d92cf3..2e86d716d5 100755
+--- a/kernel/msm-4.9/arch/arm64/boot/dts/qcom/sdm845.dtsi
++++ b/kernel/msm-4.9/arch/arm64/boot/dts/qcom/sdm845.dtsi
+@@ -515,6 +515,11 @@
+ 		};
+ 	};
+ 
++    quectel-5g-rmem {
++        compatible = "quectel,quectel-5g-rmem";
++        memory-region = <&quectel_5g_mem>;
++    };
++
+ 	reserved-memory {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+@@ -613,6 +618,12 @@
+ 			reg = <0 0x97b00000 0 0x100000>;
+ 		};
+ 
++		quectel_5g_mem: quectel_5g_region@0x98000000 {
++			compatible = "removed-dma-pool";
++			no-map;
++			reg = <0 0x98000000 0 0x400000>;
++		};
++
+ 		adsp_mem: adsp_region {
+ 			compatible = "shared-dma-pool";
+ 			alloc-ranges = <0 0x00000000 0 0xffffffff>;
+diff --git a/kernel/msm-4.9/arch/arm64/mm/dma-mapping.c b/kernel/msm-4.9/arch/arm64/mm/dma-mapping.c
+index c38c08ee63..b64e3809a3 100644
+--- a/kernel/msm-4.9/arch/arm64/mm/dma-mapping.c
++++ b/kernel/msm-4.9/arch/arm64/mm/dma-mapping.c
+@@ -72,7 +72,7 @@ static bool is_dma_coherent(struct device *dev, unsigned long attrs)
+ 
+ static struct gen_pool *atomic_pool;
+ #define NO_KERNEL_MAPPING_DUMMY 0x2222
+-#define DEFAULT_DMA_COHERENT_POOL_SIZE  SZ_256K
++#define DEFAULT_DMA_COHERENT_POOL_SIZE  SZ_16M
+ static size_t atomic_pool_size __initdata = DEFAULT_DMA_COHERENT_POOL_SIZE;
+ 
+ static int __init early_coherent_pool(char *p)
+diff --git a/kernel/msm-4.9/drivers/Makefile b/kernel/msm-4.9/drivers/Makefile
+index 28aba40ca7..da0a9ff812 100644
+--- a/kernel/msm-4.9/drivers/Makefile
++++ b/kernel/msm-4.9/drivers/Makefile
+@@ -21,6 +21,7 @@ obj-$(CONFIG_PARISC)		+= parisc/
+ obj-$(CONFIG_RAPIDIO)		+= rapidio/
+ obj-y				+= video/
+ obj-y				+= idle/
++obj-y				+= sprd_pcie/
+ 
+ # IPMI must come before ACPI in order to provide IPMI opregion support
+ obj-y				+= char/ipmi/
+diff --git a/kernel/msm-4.9/drivers/of/of_reserved_mem.c b/kernel/msm-4.9/drivers/of/of_reserved_mem.c
+index 4a1cab5b21..43873a5122 100644
+--- a/kernel/msm-4.9/drivers/of/of_reserved_mem.c
++++ b/kernel/msm-4.9/drivers/of/of_reserved_mem.c
+@@ -396,3 +396,29 @@ void of_reserved_mem_device_release(struct device *dev)
+ 	rmem->ops->device_release(rmem, dev);
+ }
+ EXPORT_SYMBOL_GPL(of_reserved_mem_device_release);
++
++/**
++ * of_reserved_mem_lookup() - acquire reserved_mem from a device node
++ * @np:     node pointer of the desired reserved-memory region
++ *
++ * This function allows drivers to acquire a reference to the reserved_mem
++ * struct based on a device node handle.
++ *
++ * Returns a reserved_mem reference, or NULL on error.
++ */
++struct reserved_mem *of_reserved_mem_lookup(struct device_node *np)
++{
++    const char *name;
++    int i;
++
++    if (!np->full_name)
++        return NULL;
++
++    name = kbasename(np->full_name);
++    for (i = 0; i < reserved_mem_count; i++)
++        if (!strcmp(reserved_mem[i].name, name))
++            return &reserved_mem[i];
++
++    return NULL;
++}
++EXPORT_SYMBOL_GPL(of_reserved_mem_lookup);
+diff --git a/kernel/msm-4.9/drivers/usb/dwc3/dwc3-pci.c b/kernel/msm-4.9/drivers/usb/dwc3/dwc3-pci.c
+index d6493abcf6..38b8291a1f 100644
+--- a/kernel/msm-4.9/drivers/usb/dwc3/dwc3-pci.c
++++ b/kernel/msm-4.9/drivers/usb/dwc3/dwc3-pci.c
+@@ -26,7 +26,7 @@
+ #include <linux/acpi.h>
+ #include <linux/delay.h>
+ 
+-#define PCI_DEVICE_ID_SYNOPSYS_HAPSUSB3		0xabcd
++#define PCI_DEVICE_ID_SYNOPSYS_HAPSUSB3		0xabcc
+ #define PCI_DEVICE_ID_SYNOPSYS_HAPSUSB3_AXI	0xabce
+ #define PCI_DEVICE_ID_SYNOPSYS_HAPSUSB31	0xabcf
+ #define PCI_DEVICE_ID_INTEL_BYT			0x0f37
+diff --git a/kernel/msm-4.9/include/linux/of_reserved_mem.h b/kernel/msm-4.9/include/linux/of_reserved_mem.h
+index dea0fd55a0..78aaf3b3a3 100644
+--- a/kernel/msm-4.9/include/linux/of_reserved_mem.h
++++ b/kernel/msm-4.9/include/linux/of_reserved_mem.h
+@@ -45,6 +45,7 @@ int early_init_dt_alloc_reserved_memory_arch(phys_addr_t size,
+ void fdt_init_reserved_mem(void);
+ void fdt_reserved_mem_save_node(unsigned long node, const char *uname,
+ 			       phys_addr_t base, phys_addr_t size);
++struct reserved_mem *of_reserved_mem_lookup(struct device_node *np);
+ #else
+ static inline int of_reserved_mem_device_init_by_idx(struct device *dev,
+ 					struct device_node *np, int idx)
+@@ -56,6 +57,10 @@ static inline void of_reserved_mem_device_release(struct device *pdev) { }
+ static inline void fdt_init_reserved_mem(void) { }
+ static inline void fdt_reserved_mem_save_node(unsigned long node,
+ 		const char *uname, phys_addr_t base, phys_addr_t size) { }
++static inline struct reserved_mem *of_reserved_mem_lookup(struct device_node *np)
++{
++    return NULL;
++}
+ #endif
+ 
+ /**

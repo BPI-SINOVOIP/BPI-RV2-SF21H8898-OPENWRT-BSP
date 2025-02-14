@@ -1,0 +1,47 @@
+#!/bin/sh
+usage() {
+cat << EOF
+Usage: msitest <on|redo|exit> <msi_wifi | common [hb|lb] | msi_all [hb|lb]>
+EOF
+}
+
+if [ -z $1 ]; then
+	usage; exit;
+fi
+
+case "$1" in
+on)	cmd1="rmmod sf21x2880_fmac";;
+redo)	cmd1="rmmod msi_test";;
+exit)	rmmod msi_test; exit;;
+*)	usage; exit;;
+esac
+
+eval $cmd1
+sleep 2s
+cmd2="insmod msi_test"
+
+case "$2" in
+msi_wifi)
+	args=" bin_type=1 band_mode=2"
+	eval $cmd2$args
+	exit
+	;;
+common)
+	args=" bin_type=0"
+	;;
+msi_all)
+	args=" bin_type=2"
+	;;
+*)
+	usage
+	exit
+	;;
+esac
+
+case "$3" in
+lb)	args=$args" band_mode=0";;
+hb)	args=$args" band_mode=1";;
+*)	args=$args" band_mode=2";;
+esac
+
+eval $cmd2$args

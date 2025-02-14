@@ -1,0 +1,39 @@
+Index: netifd-2022-02-20-136006b8/wireless.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/wireless.c
++++ netifd-2022-02-20-136006b8/wireless.c
+@@ -27,6 +27,7 @@
+  */
+ 
+ #include <signal.h>
++#include <stdlib.h>
+ #include "netifd.h"
+ #include "wireless.h"
+ #include "handler.h"
+@@ -40,6 +41,7 @@ static struct blob_buf b;
+ static int drv_fd;
+ static LIST_HEAD(handlers);
+ static bool handler_pending;
++static int sfwpad_flag;
+ 
+ enum {
+ 	WDEV_ATTR_DISABLED,
+@@ -607,6 +609,10 @@ __wireless_device_set_up(struct wireless
+ 	wdev->prev_config = NULL;
+ 	wdev->state = IFS_SETUP;
+ 	wireless_device_run_handler(wdev, true, WDEV_SETUP);
++	if (sfwpad_flag == 0) {
++		system("/usr/sbin/sf_wpad start &");
++		sfwpad_flag = 1;
++	}
+ }
+ 
+ static void
+@@ -1910,6 +1916,7 @@ void
+ wireless_start_pending(void)
+ {
+ 	struct wireless_device *wdev;
++	sfwpad_flag = 0;
+ 
+ 	vlist_for_each_element(&wireless_devices, wdev, node)
+ 	{

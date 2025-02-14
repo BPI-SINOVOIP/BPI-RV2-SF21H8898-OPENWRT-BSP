@@ -1,0 +1,15 @@
+.*.swp
+/*.patch
+/llvm-bpf*
+*.orig
+*.rej
+*~
+.#*
+*#
+.emacs.desktop*
+TAGS*~
+tags
+.project
+.cproject
+.ccache
+.vscode*

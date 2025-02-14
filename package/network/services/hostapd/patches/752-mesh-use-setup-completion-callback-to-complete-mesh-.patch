@@ -1,0 +1,22 @@
+--- a/src/ap/hostapd.c
++++ b/src/ap/hostapd.c
+@@ -2418,7 +2418,7 @@ int hostapd_setup_interface(struct hosta
+ 	ret = setup_interface(iface);
+ 	if (ret) {
+ 		wpa_printf(MSG_ERROR, "%s: Unable to setup interface.",
+-			   iface->conf->bss[0]->iface);
++			   iface->conf ? iface->conf->bss[0]->iface : "N/A");	
+ 		return -1;
+ 	}
+ 
+--- a/wpa_supplicant/mesh.c
++++ b/wpa_supplicant/mesh.c
+@@ -301,8 +301,6 @@ static int wpas_mesh_complete(struct wpa
+ 			ssid->id);
+ 		wpas_notify_mesh_group_started(wpa_s, ssid);
+ 	}
+-
+-	return ret;
+ }
+ 
+ 

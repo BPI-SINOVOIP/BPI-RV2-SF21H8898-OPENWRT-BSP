@@ -1,0 +1,360 @@
+Index: netifd-2022-02-20-136006b8/system-linux.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/system-linux.c
++++ netifd-2022-02-20-136006b8/system-linux.c
+@@ -45,6 +45,7 @@
+ #include <linux/fib_rules.h>
+ #include <linux/veth.h>
+ #include <linux/version.h>
++#include <netlink/genl/ctrl.h>
+ 
+ #include <sched.h>
+ 
+@@ -92,6 +93,10 @@ static int cb_sf_eth_event(struct nl_msg
+ static void handle_hotplug_event(struct uloop_fd *u, unsigned int events);
+ static int system_add_proto_tunnel(const char *name, const uint8_t proto,
+ 					const unsigned int link, struct blob_attr **tb);
++#ifdef CONFIG_SIWIFI_NETIFD_EASYMESH
++static int cb_sf_eth_phy_event(struct nl_msg *msg, void *arg);
++#define EASYMESH_GROUP 1
++#endif
+ 
+ static char dev_buf[256];
+ static const char *proc_path = "/proc";
+@@ -264,9 +269,12 @@ int system_init(void)
+ 	static struct event_socket rtnl_event;
+ 	static struct event_socket hotplug_event;
+         static struct event_socket sf_eth_event;
++#ifdef CONFIG_SIWIFI_NETIFD_EASYMESH
++        static struct event_socket sf_phy_event;
++#endif
+         int dpsgroup = 0;
+         struct unl unl;
+-        int ret;	
++        int ret;
+ 
+ 	sock_ioctl = socket(AF_LOCAL, SOCK_DGRAM, 0);
+ 	system_fd_set_cloexec(sock_ioctl);
+@@ -278,12 +286,14 @@ int system_init(void)
+                 netifd_log_message(L_NOTICE, "get dps group=%d\n",dpsgroup);
+                 unl_free(&unl);
+         }
+- 
++
+         if (dpsgroup != 0 && !create_event_socket(&sf_eth_event, NETLINK_GENERIC, 1 << (dpsgroup - 1), cb_sf_eth_event)){
+                 netifd_log_message(L_WARNING, "Can't initialize generic netlink\n");
+         }
+- 
+-
++#ifdef CONFIG_SIWIFI_NETIFD_EASYMESH
++        if (!create_event_socket(&sf_phy_event, NETLINK_USERSOCK, EASYMESH_GROUP, cb_sf_eth_phy_event))
++                netifd_log_message(L_WARNING, "Can't initialize generic netlink for phy\n");
++#endif
+ 	/* Prepare socket for routing / address control */
+ 	sock_rtnl = create_socket(NETLINK_ROUTE, 0);
+ 	if (!sock_rtnl)
+@@ -711,25 +721,29 @@ static void call_dps_event(const char *i
+ 
+ //this must be sync with linux kernel
+ enum {
+-       SF_ETH_CMD_ATTR_UNSPEC = 0,
+-       SF_ETH_CMD_ATTR_DPS_PORT,            /* eth phy port*/
+-       SF_ETH_CMD_ATTR_DPS_LINK,            /* 0---link down  1---link up */
+-       //SF_ETH_CMD_ATTR_DPS_IS_WAN,          /* 0---lan     1---wan */
+-       //SF_ETH_CMD_ATTR_DPS_VLANID,          /* 0---lan     1---wan */
+-       SF_ETH_CMD_ATTR_DPS_MAC,
+-       SF_ETH_CMD_ATTR_DPS_IFNAME,
+-       __SF_ETH_CMD_ATTR_MAX,
++	SF_ETH_CMD_ATTR_UNSPEC = 0,
++	SF_ETH_CMD_ATTR_DPS_PORT,            /* eth phy port*/
++	SF_ETH_CMD_ATTR_DPS_LINK,            /* 0---link down  1---link up */
++	//SF_ETH_CMD_ATTR_DPS_IS_WAN,          /* 0---lan     1---wan */
++	SF_ETH_CMD_ATTR_DPS_MAC,
++	SF_ETH_CMD_ATTR_DPS_VLAN,
++	SF_ETH_CMD_ATTR_DPS_IFNAME,
++	SF_ETH_CMD_ATTR_DPS_FLAG,
++	__SF_ETH_CMD_ATTR_MAX,
+ };
+- 
+- static struct nla_policy sf_eth_policy[__SF_ETH_CMD_ATTR_MAX+1] = {
+-        [SF_ETH_CMD_ATTR_DPS_PORT]   = { .type = NLA_U32 },
+-        [SF_ETH_CMD_ATTR_DPS_LINK]   = { .type = NLA_U32 },
+-        //[SF_ETH_CMD_ATTR_DPS_IS_WAN]   = { .type = NLA_U32 },
+-        //[SF_ETH_CMD_ATTR_DPS_VLANID]   = { .type = NLA_U32 },
+-	[SF_ETH_CMD_ATTR_DPS_MAC]   = { .type = NLA_STRING },
+-        [SF_ETH_CMD_ATTR_DPS_IFNAME]   = { .type = NLA_STRING },
+- };
+- 
++
++#define SF_GENL_ATTR_MAX_VALID          (__SF_ETH_CMD_ATTR_MAX - 1)
++
++static struct nla_policy sf_eth_policy[__SF_ETH_CMD_ATTR_MAX] = {
++	[SF_ETH_CMD_ATTR_DPS_PORT]  = { .type = NLA_U32 },
++	[SF_ETH_CMD_ATTR_DPS_LINK]  = { .type = NLA_U32 },
++	//[SF_ETH_CMD_ATTR_DPS_IS_WAN]   = { .type = NLA_U32 },
++	[SF_ETH_CMD_ATTR_DPS_MAC]  = { .type = NLA_STRING },
++	[SF_ETH_CMD_ATTR_DPS_VLAN]  = { .type = NLA_U32 },
++	[SF_ETH_CMD_ATTR_DPS_IFNAME]  = { .type = NLA_STRING },
++	[SF_ETH_CMD_ATTR_DPS_FLAG]  = { .type = NLA_U8 },
++};
++
+ static void substr(char *dst, char *src, char cut, int is_left)
+ {
+        int i, len;
+@@ -778,7 +792,7 @@ static int get_wan_port(int *wan_port, i
+                substr(vid_str, (char *)wan_ifname, '.', 0);
+                *wan_vid = atoi(vid_str);
+                uci_foreach_element(&pkg->sections, e)
+-               {  
++               {
+                        s = uci_to_section(e);
+                        if (strcmp(s->type, "switch_vlan"))
+                                continue;
+@@ -805,6 +819,69 @@ err_out:
+        return 0;
+ }
+ 
++#ifdef CONFIG_SIWIFI_NETIFD_EASYMESH
++/* Get phy link state and notify easymesh */
++#define SF_GENL_EVT_UPDOWN              2
++
++struct sf_mac_updown {
++	uint8_t dsmac[6];
++	uint8_t port;
++	char ifname[16];
++	uint16_t vlan_id;
++	bool updown;
++	bool is_wifi;
++	bool notify_easymesh_flag;
++};
++
++static int cb_sf_eth_phy_event(struct nl_msg *msg, void *arg)
++{
++        struct nlmsghdr *nh = nlmsg_hdr(msg);
++        struct genlmsghdr *ghdr = nlmsg_data(nh);
++        const char* zero_mac = "00:00:00:00:00:00";
++        struct sf_mac_updown *ctx;
++        char cmd[128];
++        char mac_str[18];
++        int dir_fd, fd;
++        int wan_port = -1;
++        int wan_vid = -1;
++
++        if (!nlmsg_valid_hdr(nh, GENL_HDRLEN)) {
++                netifd_log_message(L_WARNING, "sf phy event recv invalid ghr\n");
++                goto out;
++        }
++        if (ghdr->cmd != SF_GENL_EVT_UPDOWN)
++                goto out;
++
++        get_wan_port(&wan_port, &wan_vid);
++        ctx = (struct sf_mac_updown *)((char *)ghdr + GENL_HDRLEN);
++
++        snprintf(mac_str, sizeof(mac_str), "%02x:%02x:%02x:%02x:%02x:%02x",
++                 ctx->dsmac[0], ctx->dsmac[1], ctx->dsmac[2], ctx->dsmac[3], ctx->dsmac[4], ctx->dsmac[5]);
++
++        dir_fd = open("/bin/", O_RDONLY);
++        if (dir_fd < 0)
++                goto out;
++
++        fd = openat(dir_fd, "sf_easymesh", O_RDONLY);
++        if (fd < 0) {
++                close(dir_fd);
++                goto out;
++        }
++
++        if ((!ctx->updown || ctx->port == wan_port) && ctx->notify_easymesh_flag)
++                sprintf(cmd, "sf_easymesh update_ethdev %s %s %s %d &", ctx->port == wan_port ? "wan" : "lan",
++                        ctx->updown ? "up" : "down", zero_mac, ctx->port);
++        else
++                sprintf(cmd, "sf_easymesh update_ethdev lan up %s %d &", mac_str, ctx->port);
++
++        netifd_log_message(L_NOTICE, "Netifd call: %s", cmd);
++        system(cmd);
++        close(fd);
++        close(dir_fd);
++out:
++	return 0;
++}
++#endif
+ 
+  #define SF_CMD_GENERIC      1
+  #define SF_CMD_ATTR_DPS     1
+@@ -813,7 +890,7 @@ err_out:
+         struct nlmsghdr *nh = nlmsg_hdr(msg);
+         struct genlmsghdr *ghdr;
+         struct nlattr *nla[__SF_ETH_CMD_ATTR_MAX + 1];
+-        int port = 0;
++        int port = 0, link_change = 0;
+         int updown = 0;
+         //int is_wan = 0;
+         //int vlanid = 0;
+@@ -822,7 +899,12 @@ err_out:
+         char ifname[32] = {0};
+         char vlan_ifame[32] = {0};
+ 	char macaddr[20] = {0};
+- 
++#ifdef CONFIG_SIWIFI_NETIFD_EASYMESH
++        int dir_fd, fd;
++        const char* zero_mac = "00:00:00:00:00:00";
++        char cmd[128];
++#endif
++
+         if (!nlmsg_valid_hdr(nh, GENL_HDRLEN)){
+                 netifd_log_message(L_WARNING, "sf eth event recv invalid ghr\n");
+                 goto out;
+@@ -832,42 +914,70 @@ err_out:
+                 netifd_log_message(L_WARNING, "sf eth event recv wrong ghr cmd=%d\n",(int)ghdr->cmd);
+                 goto out;
+         }
+- 
++
+         genlmsg_parse(nh, 0, nla, __SF_ETH_CMD_ATTR_MAX, sf_eth_policy);
+- 
++
+         if(nla[SF_ETH_CMD_ATTR_DPS_PORT]){
+                 port = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_PORT]);
+         }
+- 
++
+         if(nla[SF_ETH_CMD_ATTR_DPS_LINK]){
+                 updown = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_LINK]);
+         }
+-	
+-	if(updown > 0){
+-                if(nla[SF_ETH_CMD_ATTR_DPS_MAC]){
+-                        sprintf(macaddr,"%s",nla_get_string(nla[SF_ETH_CMD_ATTR_DPS_MAC]));
+-                }
+-        } 	
++
++        if(nla[SF_ETH_CMD_ATTR_DPS_MAC]){
++                snprintf(macaddr, sizeof(macaddr), "%s", (char *)nla_data(nla[SF_ETH_CMD_ATTR_DPS_MAC]));
++        }
+ 
+         //if(nla[SF_ETH_CMD_ATTR_DPS_IS_WAN]){
+         //       is_wan = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_IS_WAN]);
+         //}
+-        //if(nla[SF_ETH_CMD_ATTR_DPS_VLANID]){
+-        //       vlanid = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_VLANID]);
++        //if(nla[SF_ETH_CMD_ATTR_DPS_VLAN]){
++        //       vlanid = nla_get_u32(nla[SF_ETH_CMD_ATTR_DPS_VLAN]);
+         //}
+- 
++
+         if(nla[SF_ETH_CMD_ATTR_DPS_IFNAME]){
+                 sprintf(ifname,"%s",nla_get_string(nla[SF_ETH_CMD_ATTR_DPS_IFNAME]));
+         }
+-	 	
++        if(nla[SF_ETH_CMD_ATTR_DPS_FLAG]){
++                link_change = nla_get_u8(nla[SF_ETH_CMD_ATTR_DPS_FLAG]);
++        }
++
+ 	get_wan_port(&wan_port, &wan_vid);
+         if (port == wan_port) {
+                 is_wan = 1;
+                 vlanid = wan_vid;
+         }
+-	
+-        netifd_log_message(L_NOTICE, "sf_eth_event port %d updown %d is_wan %d vlanid %d ifname %s\n",
+-                                port, updown, is_wan,vlanid, ifname);
++
++        netifd_log_message(L_NOTICE, "sf_eth_event port %d updown %d is_wan %d vlanid %d ifname %s link_change %d\n",
++                                port, updown, is_wan,vlanid, ifname, link_change);
++#ifdef CONFIG_SIWIFI_NETIFD_EASYMESH
++        dir_fd = open("/bin/", O_RDONLY);
++        if (dir_fd < 0)
++                goto end_update;
++
++        fd = openat(dir_fd, "sf_easymesh", O_RDONLY);
++        if (fd < 0) {
++            close(dir_fd);
++            goto end_update;
++        }
++        if (link_change) {
++                if (is_wan || !updown)
++                        sprintf(cmd, "sf_easymesh update_ethdev %s %s %s %d &", is_wan ? "wan" : "lan",
++                                      updown ? "up" : "down", zero_mac, port);
++                else
++                        sprintf(cmd, "sf_easymesh get_fdb_entry %d &", port);
++        } else {
++                sprintf(cmd, "sf_easymesh update_ethdev lan up %s %d &", macaddr, port);
++        }
++        netifd_log_message(L_NOTICE, "Netifd call: %s", cmd);
++        system(cmd);
++
++        close(fd);
++        close(dir_fd);
++end_update:
++#endif
++
+         if(is_wan){
+                 sprintf(vlan_ifame,"%s.%d",ifname,vlanid);
+                 struct device *dev = device_get(vlan_ifame, false);
+@@ -1135,12 +1245,12 @@ retry:
+ 	if (dev->settings.flags & DEV_OPT_ISOLATE &&
+ 	    dev->settings.isolate)
+ 		system_bridge_set_isolated(dev, "1");
+-	
++
+ 	if (dev->settings.flags & DEV_OPT_GROUP) {
+                 snprintf(buf, sizeof(buf), "%i", dev->settings.group);
+                 system_bridge_set_group(dev, buf);
+         }
+- 
++
+         if (dev->settings.flags & DEV_OPT_BRINPUT_DISABLE) {
+                 system_bridge_set_disable_input(dev, dev->settings.disable_input ? "1" : "0");
+         }
+@@ -3868,7 +3978,7 @@ static void system_vxlan_map_bool_attr(s
+ 
+ 		if ((attrtype == IFLA_VXLAN_GBP) && val)
+ 			nla_put_flag(msg, attrtype);
+-		else 
++		else
+ 			nla_put_u8(msg, attrtype, val);
+ 
+ 	}
+Index: netifd-2022-02-20-136006b8/netifd.h
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/netifd.h
++++ netifd-2022-02-20-136006b8/netifd.h
+@@ -48,6 +48,13 @@
+ #define DEFAULT_BOARD_JSON	"/etc/board.json"
+ #endif
+ 
++/**
++ * The easymesh related functions in neftifd are controlled by the macro below, and is disabled by default:
++ * 1. Add a hook in Netifd to listen for online and offline events on wired devices.
++ * 2. Remove the logic of restarting the network, as it will affect the WPS function.
++ */
++//#define CONFIG_SIWIFI_NETIFD_EASYMESH
++
+ extern const char *resolv_conf;
+ extern char *hotplug_cmd_path;
+ extern unsigned int debug_mask;
+Index: netifd-2022-02-20-136006b8/wireless.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/wireless.c
++++ netifd-2022-02-20-136006b8/wireless.c
+@@ -1966,7 +1966,9 @@ void wireless_device_hotplug_event(const
+  * reload_flag == false The first time the STA interface is started, the network will not be restarted.
+  * reload_flag == true  If there are subsequent down/up operations on the STA interface, the network will be restarted.
+  */
++#ifndef CONFIG_SIWIFI_NETIFD_EASYMESH
+ static bool reload_flag = false;
++#endif
+ 
+ void wireless_sta_proto_renew(char *ifname, bool status)
+ {
+@@ -2002,9 +2004,11 @@ void wireless_sta_proto_renew(char *ifna
+ 
+     if (iface) {
+         interface_proto_event(iface->proto, PROTO_CMD_RENEW, false);
++        #ifndef CONFIG_SIWIFI_NETIFD_EASYMESH
+         if (reload_flag)
+             system("/etc/init.d/network restart &");
+         else
+             reload_flag = true;
++        #endif
+     }
+ }

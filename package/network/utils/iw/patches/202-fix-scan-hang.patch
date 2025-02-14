@@ -1,0 +1,55 @@
+Index: iw-5.16/event.c
+===================================================================
+--- iw-5.16.orig/event.c
++++ iw-5.16/event.c
+@@ -1416,6 +1416,24 @@ __u32 listen_events(struct nl80211_state
+ 	return __do_listen_events(state, n_waits, waits, 0, NULL, NULL);
+ }
+ 
++/* RM#1002067 fix scan hang */
++__u32 listen_events_scan(struct nl80211_state *state,
++		    const int n_waits, const __u32 *waits)
++{
++	int mcid;
++	int ret;
++
++	/* Scan multicast group */
++	mcid = nl_get_multicast_id(state->nl_sock, "nl80211", "scan");
++	if (mcid >= 0) {
++		ret = nl_socket_add_membership(state->nl_sock, mcid);
++		if (ret)
++			return ret;
++	}
++
++	return __do_listen_events(state, n_waits, waits, 0, NULL, NULL);
++}
++
+ static int print_events(struct nl80211_state *state,
+ 			struct nl_msg *msg,
+ 			int argc, char **argv,
+Index: iw-5.16/iw.h
+===================================================================
+--- iw-5.16.orig/iw.h
++++ iw-5.16/iw.h
+@@ -191,6 +191,7 @@ struct print_event_args {
+ 
+ __u32 listen_events(struct nl80211_state *state,
+ 		    const int n_waits, const __u32 *waits);
++__u32 listen_events_scan(struct nl80211_state *state, const int n_waits, const __u32 *waits);
+ int __prepare_listen_events(struct nl80211_state *state);
+ __u32 __do_listen_events(struct nl80211_state *state,
+ 			 const int n_waits, const __u32 *waits,
+Index: iw-5.16/scan.c
+===================================================================
+--- iw-5.16.orig/scan.c
++++ iw-5.16/scan.c
+@@ -2645,7 +2645,8 @@ static int handle_scan_combined(struct n
+ 	 * Alas, the kernel doesn't do that (yet).
+ 	 */
+ 
+-	if (listen_events(state, ARRAY_SIZE(cmds), cmds) ==
++	/* RM#1002067 fix scan hang*/
++	if (listen_events_scan(state, ARRAY_SIZE(cmds), cmds) ==
+ 					NL80211_CMD_SCAN_ABORTED) {
+ 		printf("scan aborted!\n");
+ 		return 0;

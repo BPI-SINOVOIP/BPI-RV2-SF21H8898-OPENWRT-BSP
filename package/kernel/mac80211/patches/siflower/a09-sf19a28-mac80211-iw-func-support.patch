@@ -1,0 +1,117 @@
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3665,6 +3665,10 @@ static int nl80211_send_iface(struct sk_
+ {
+ 	struct net_device *dev = wdev->netdev;
+ 	void *hdr;
++	struct nlattr *infoattr;
++	struct ieee80211_supported_band *sband;
++	int ch, survey_idx = 0;
++	bool survey_tag = 0;
+ 
+ 	WARN_ON(cmd != NL80211_CMD_NEW_INTERFACE &&
+ 		cmd != NL80211_CMD_DEL_INTERFACE &&
+@@ -3698,6 +3702,19 @@ static int nl80211_send_iface(struct sk_
+ 		if (ret == 0) {
+ 			if (nl80211_send_chandef(msg, &chandef))
+ 				goto nla_put_failure;
++			if (wdev->wiphy) {
++				sband = wdev->wiphy->bands[chandef.chan->band];
++				if (!sband)
++					goto nla_put_failure;
++				for (ch = 0; ch < sband->n_channels; ch++, survey_idx++) {
++					if (sband->channels[ch].center_freq == chandef.chan->center_freq) {
++						survey_tag = 1;
++						break;
++					}
++				}
++				if (!survey_tag)
++					goto nla_put_failure;
++			}
+ 		}
+ 	}
+ 
+@@ -3711,6 +3728,29 @@ static int nl80211_send_iface(struct sk_
+ 			goto nla_put_failure;
+ 	}
+ 
++	if (rdev->ops->dump_station) {
++        int bitrate = 0, err = 0;
++        struct station_info sinfo;
++        u8 mac_addr[ETH_ALEN];
++        int sta_idx = 0;
++
++        if (wdev->netdev) {
++            while (1) {
++                memset(&sinfo, 0, sizeof(sinfo));
++                err = rdev_dump_station(rdev, wdev->netdev, sta_idx,
++                        mac_addr, &sinfo);
++                if (err)
++                    break;
++                if (bitrate < sinfo.txrate.legacy)
++                    bitrate = sinfo.txrate.legacy;
++
++                sta_idx++;
++            }
++        }
++        if (nla_put_u16(msg, NL80211_STA_INFO_TX_BITRATE, bitrate))
++            goto nla_put_failure;
++}
++
+ 	wdev_lock(wdev);
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_AP:
+@@ -3750,6 +3790,32 @@ static int nl80211_send_iface(struct sk_
+ 			goto nla_put_failure;
+ 	}
+ 
++	infoattr = nla_nest_start(msg, NL80211_ATTR_SURVEY_INFO);
++	if (!infoattr) {
++        	printk("--fialed !--\n");
++        	goto nla_put_failure;
++    	}
++    	if (rdev->ops->dump_survey) {
++        	int ret;
++        	struct survey_info info;
++        	memset(&info, 0, sizeof(info));
++        	ret = rdev->ops->dump_survey(&rdev->wiphy, wdev->netdev, survey_idx, &info);
++        	if (ret != 0)
++            		goto nla_put_failure;
++        	if ((info.filled & SURVEY_INFO_NOISE_DBM) &&
++                	nla_put_u32(msg, NL80211_SURVEY_INFO_NOISE, info.noise))
++            		goto nla_put_failure;
++        	if ((info.filled & SURVEY_INFO_TIME) &&
++                	nla_put_u64_64bit(msg, NL80211_SURVEY_INFO_TIME,
++                    	info.time, NL80211_SURVEY_INFO_PAD))
++            		goto nla_put_failure;
++        	if ((info.filled & SURVEY_INFO_TIME_BUSY) &&
++                	nla_put_u64_64bit(msg, NL80211_SURVEY_INFO_TIME_BUSY,
++                    	info.time_busy, NL80211_SURVEY_INFO_PAD))
++             		goto nla_put_failure;
++       	}
++       	nla_nest_end(msg, infoattr);
++
+ 	genlmsg_end(msg, hdr);
+ 	return 0;
+ 
+@@ -9888,9 +9954,7 @@ static int nl80211_send_survey(struct sk
+ 	if ((survey->filled & SURVEY_INFO_NOISE_DBM) &&
+ 	    nla_put_u8(msg, NL80211_SURVEY_INFO_NOISE, survey->noise))
+ 		goto nla_put_failure;
+-	if ((survey->filled & SURVEY_INFO_IN_USE) &&
+-	    nla_put_flag(msg, NL80211_SURVEY_INFO_IN_USE))
+-		goto nla_put_failure;
++
+ 	if ((survey->filled & SURVEY_INFO_TIME) &&
+ 	    nla_put_u64_64bit(msg, NL80211_SURVEY_INFO_TIME,
+ 			survey->time, NL80211_SURVEY_INFO_PAD))
+@@ -9899,6 +9963,9 @@ static int nl80211_send_survey(struct sk
+ 	    nla_put_u64_64bit(msg, NL80211_SURVEY_INFO_TIME_BUSY,
+ 			      survey->time_busy, NL80211_SURVEY_INFO_PAD))
+ 		goto nla_put_failure;
++	if ((survey->filled & SURVEY_INFO_IN_USE) &&
++	    nla_put_flag(msg, NL80211_SURVEY_INFO_IN_USE))
++		goto nla_put_failure;
+ 	if ((survey->filled & SURVEY_INFO_TIME_EXT_BUSY) &&
+ 	    nla_put_u64_64bit(msg, NL80211_SURVEY_INFO_TIME_EXT_BUSY,
+ 			      survey->time_ext_busy, NL80211_SURVEY_INFO_PAD))

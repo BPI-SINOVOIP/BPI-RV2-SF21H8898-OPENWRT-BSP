@@ -1,0 +1,16 @@
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7570,10 +7570,9 @@ static int nl80211_req_set_reg(struct sk
+ 			return -EINVAL;
+ 
+ 		data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+-		return regulatory_hint_user(data, user_reg_hint_type);
+-	 err = regulatory_hint_user(data, user_reg_hint_type);
+-	 reg_set_channel_no_dfs(rd_disabled);
+-	 return err;
++        err = regulatory_hint_user(data, user_reg_hint_type);
++        reg_set_channel_no_dfs(rd_disabled);
++        return err;
+ 	case NL80211_USER_REG_HINT_INDOOR:
+ 		if (info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
+ 			owner_nlportid = info->snd_portid;

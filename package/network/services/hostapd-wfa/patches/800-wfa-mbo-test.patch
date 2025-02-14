@@ -1,0 +1,81 @@
+Index: hostapd-2022-01-16-cff80b4f/src/ap/rrm.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/rrm.c
++++ hostapd-2022-01-16-cff80b4f/src/ap/rrm.c
+@@ -591,7 +591,7 @@ int hostapd_send_beacon_req(struct hosta
+ 	}
+ 	pos = wpabuf_head(req);
+ 	mode = pos[6];
+-
++#if 0
+ 	if (!sta || !(sta->flags & WLAN_STA_AUTHORIZED)) {
+ 		wpa_printf(MSG_INFO,
+ 			   "Beacon request: " MACSTR " is not connected",
+@@ -635,6 +635,7 @@ int hostapd_send_beacon_req(struct hosta
+ 			   "Beacon request: Unknown measurement mode %d", mode);
+ 		return -1;
+ 	}
++#endif
+ 
+ 	buf = wpabuf_alloc(5 + 2 + 3 + wpabuf_len(req));
+ 	if (!buf)
+Index: hostapd-2022-01-16-cff80b4f/hostapd/main.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/hostapd/main.c
++++ hostapd-2022-01-16-cff80b4f/hostapd/main.c
+@@ -174,6 +174,7 @@ static int hostapd_driver_init(struct ho
+ 		return -1;
+ 	}
+ 
++    hapd->mbo_assoc_disallow = 1;
+ 	hapd->setup_complete_cb = hostapd_setup_complete_cb;
+ 
+ 	/* Initialize the driver interface */
+Index: hostapd-2022-01-16-cff80b4f/hostapd/ctrl_iface.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/hostapd/ctrl_iface.c
++++ hostapd-2022-01-16-cff80b4f/hostapd/ctrl_iface.c
+@@ -966,6 +966,7 @@ static int hostapd_ctrl_iface_bss_tm_req
+ 		bss_term_dur[0] = 4; /* Subelement ID */
+ 		bss_term_dur[1] = 10; /* Length */
+ 		os_memset(&bss_term_dur[2], 0, 8);
++		os_memset(&bss_term_dur[2], 5, 1);
+ 		end = os_strchr(pos, ',');
+ 		if (end == NULL) {
+ 			wpa_printf(MSG_DEBUG, "Invalid bss_term data");
+Index: hostapd-2022-01-16-cff80b4f/src/ap/wnm_ap.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/wnm_ap.c
++++ hostapd-2022-01-16-cff80b4f/src/ap/wnm_ap.c
+@@ -369,8 +369,9 @@ static int ieee802_11_send_bss_trans_mgm
+ 	size_t len;
+ 	u8 *pos;
+ 	int res;
++    struct hostapd_neighbor_entry *nr;
+ 
+-	mgmt = os_zalloc(sizeof(*mgmt));
++	mgmt = os_zalloc(sizeof(*mgmt) + 200);
+ 	if (mgmt == NULL)
+ 		return -1;
+ 	os_memcpy(mgmt->da, addr, ETH_ALEN);
+@@ -381,10 +382,18 @@ static int ieee802_11_send_bss_trans_mgm
+ 	mgmt->u.action.category = WLAN_ACTION_WNM;
+ 	mgmt->u.action.u.bss_tm_req.action = WNM_BSS_TRANS_MGMT_REQ;
+ 	mgmt->u.action.u.bss_tm_req.dialog_token = dialog_token;
+-	mgmt->u.action.u.bss_tm_req.req_mode = 0;
++	mgmt->u.action.u.bss_tm_req.req_mode = 1;
+ 	mgmt->u.action.u.bss_tm_req.disassoc_timer = host_to_le16(0);
+ 	mgmt->u.action.u.bss_tm_req.validity_interval = 1;
+-	pos = mgmt->u.action.u.bss_tm_req.variable;
++    pos = mgmt->u.action.u.bss_tm_req.variable;
++
++    dl_list_for_each(nr, &hapd->nr_db, struct hostapd_neighbor_entry, list) {
++        //wpa_printf(MSG_ERROR,"nr->bssid:%pM hapd_addr:%px ssid:%s", nr->bssid, hapd, nr->ssid.ssid);
++        *pos++ = WLAN_EID_NEIGHBOR_REPORT;
++        *pos++ = wpabuf_len(nr->nr);
++        memcpy(pos, wpabuf_head(nr->nr), wpabuf_len(nr->nr));
++        pos += wpabuf_len(nr->nr);
++    }
+ 
+ 	hapd->openwrt_stats.wnm.bss_transition_request_tx++;
+ 	wpa_printf(MSG_DEBUG, "WNM: Send BSS Transition Management Request to "

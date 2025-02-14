@@ -1,0 +1,506 @@
+commit 1c2923c26d83078830c97da919d67e28391ef8a4
+Author: neil.shi <neil.shi@quectel.com>
+Date:   Tue Oct 18 16:40:16 2022 +0800
+
+     <sprd_pcie><master>[V1.1.x]:
+     <dWhy Submit>:
+     <Jira ID>: N
+     <Jira Summary>: N
+     <Quality Platform>: N
+     <CQ ID>: N
+    
+     <<< Test Notes >>>
+     <Test-Proposal>: N
+     <Stress-Test>: N
+     <HW-Test>: N
+    
+    Signed-off-by: neil.shi <neil.shi@quectel.com>
+    Change-Id: Id714e6c266d604923dddf00bf7f1d86b57a054db
+
+diff --git a/Makefile b/Makefile
+index acde9fa..05d9aaf 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,13 +1,14 @@
+ #
+ # Makefile for the sprd staging modem files
+ #
+-EXTRA_CFLAGS += -Wno-error -Wno-packed-bitfield-compat
++EXTRA_CFLAGS += -Wno-error -Wno-keyword-compat
+ ccflags-y += -DCONFIG_SPRD_PCIE_EP_DEVICE -DCONFIG_SPRD_SIPA -DCONFIG_SPRD_ETHERNET
+ obj-y += sprd_pcie.o
+ sprd_pcie-objs := pcie/sprd_pcie_ep_device.o pcie/pcie_host_resource.o pcie/sprd_pcie_quirks.o sipc/sipc.o sipc/sblock.o sipc/sbuf.o \
+                   sipc/sipc_debugfs.o sipc/smem.o sipc/smsg.o sipc/spipe.o sipc/spool.o power_manager/power_manager.o \
+ 		  sipa/sipa_core.o sipa/sipa_eth.o sipa/sipa_nic.o sipa/sipa_skb_send.o sipa/sipa_skb_recv.o sipa/sipa_dummy.o  sipa/sipa_debugfs.o sipa/sipa_dele_cmn.o \
+-		  sipa/sipa_phy_v0/sipa_fifo_irq_hal.o sipa/sipa_phy_v0/sipa_common_fifo_hal.o
++		  sipa/sipa_phy_v0/sipa_fifo_irq_hal.o sipa/sipa_phy_v0/sipa_common_fifo_hal.o \
++          rmem/rmem.o
+ 
+ PWD := $(shell pwd)
+ ifeq ($(ARCH),)
+diff --git a/include/sipc.h b/include/sipc.h
+index fe01b64..7f5cd47 100644
+--- a/include/sipc.h
++++ b/include/sipc.h
+@@ -372,13 +372,13 @@ static inline void smsg_close_ack(u8 dst, u16 channel)
+ int smem_get_area(u8 dst, u32 *base, u32 *size);
+ 
+ /**
+- * smem_alloc -- allocate shared memory block
++ * sprd_smem_alloc -- allocate shared memory block
+  *
+  * @dst: dest processor ID
+  * @size: size to be allocated, page-aligned
+  * @return: phys addr or 0 if failed
+  */
+-u32 smem_alloc(u8 dst, u32 size);
++u32 sprd_smem_alloc(u8 dst, u32 size);
+ 
+ /**
+  * smem_free -- free shared memory block
+diff --git a/pcie/sprd_pcie_ep_device.c b/pcie/sprd_pcie_ep_device.c
+index 4bd411b..3225368 100644
+--- a/pcie/sprd_pcie_ep_device.c
++++ b/pcie/sprd_pcie_ep_device.c
+@@ -39,6 +39,11 @@
+ #include "../include/sipa.h"
+ #include "../sipa/sipa_core.h"
+ 
++#include <linux/qcom_iommu.h>
++#include <asm/dma-iommu.h>
++#include <linux/dma-mapping-fast.h>
++#include <linux/msm_dma_iommu_mapping.h>
++
+ #define DRV_MODULE_NAME		"sprd-pcie-ep-device"
+ #define CONFIG_SPRD_IPA_PCIE_WORKROUND
+ 
+@@ -240,7 +245,58 @@ static void sprd_pcie_iommu_init(struct device *dev)
+ 	}
+ }
+ 
++#define SMMU_BASE 0x00000000
++#define SMMU_SIZE 0x40000000
++//#define SMMU_BASE 0x98000000
++//#define SMMU_SIZE 0x300000
++
++static struct dma_iommu_mapping* mhi_smmu_init(struct device *dev)
++{
++       int rc = 0;
++       int atomic_ctx = 1;
++       int bypass_enable = 1; 
++       struct dma_iommu_mapping *mapping = NULL;
++	   struct bus_type *bus;
++
++	   bus = msm_iommu_get_bus(dev);
++
++       mapping = arm_iommu_create_mapping(bus, SMMU_BASE, SMMU_SIZE);
++       if (IS_ERR(mapping)) {
++               rc = PTR_ERR(mapping);
++               dev_err(dev, "create mapping failed, err = %d\n", rc);
++               return NULL;
++       }
++
++  	   rc = iommu_domain_set_attr(mapping->domain, DOMAIN_ATTR_ATOMIC, &atomic_ctx);
++       if (rc) {
++               dev_err(dev, "Set atomic attribute to SMMU failed (%d)\n", rc);
++               arm_iommu_release_mapping(mapping);
++               return NULL;
++       } 
++
++       rc = iommu_domain_set_attr(mapping->domain, DOMAIN_ATTR_S1_BYPASS, &bypass_enable);
++       if (rc) {
++               dev_err(dev, "Set bypass attribute to SMMU failed (%d)\n", rc);
++               arm_iommu_release_mapping(mapping);
++               return NULL;
++       } 
++
++       rc = arm_iommu_attach_device(dev, mapping);
++       if (rc) {
++               dev_err(dev, "arm_iommu_attach_device failed (%d)\n", rc);
++               arm_iommu_release_mapping(mapping);
++               return NULL;
++       }
++
++       dev_info(dev, "attached to IOMMU\n");
++       return mapping;
++}
+ 
++static void mhi_smmu_deinit(struct device *dev)
++{
++       arm_iommu_detach_device(dev);
++       arm_iommu_release_mapping(to_dma_iommu_mapping(dev));
++}
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION( 3,11,0 ))
+ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+@@ -1183,8 +1239,14 @@ static int sprd_pci_ep_dev_probe(struct pci_dev *pdev,
+ 
+ 	dev_info(dev, "ep: probe\n");
+ 
++    if(!mhi_smmu_init(dev)){
++        return -EFAULT;
++	    dev_info(dev, "mhi_smmu_init failed\n");
++    }else{
++	    dev_info(dev, "mhi_smmu_init success\n");
++    }
+ 	sprd_pcie_iommu_init(dev);
+-	
++
+ 	ep_dev = devm_kzalloc(dev, sizeof(*ep_dev), GFP_KERNEL);
+ 	spin_lock_init(&ep_dev->set_bar_lock);
+ 	spin_lock_init(&ep_dev->bar_lock);
+@@ -1344,7 +1406,7 @@ err_disable_msi:
+ 
+ err_disable_pdev:
+ 	pci_disable_device(pdev);
+-
++	mhi_smmu_deinit(dev);
+ 	return err;
+ }
+ 
+@@ -1651,6 +1713,7 @@ static void sprd_pci_ep_dev_remove_debugfs(void)
+ }
+ #endif
+ 
++extern int quectel_5g_rmem_init(void);
+ static int __init sprd_pci_ep_dev_init(void)
+ {
+ 	pr_info("%s %s\n", __func__, QUECTEL_SPRD_PCIE_VERSION);
+@@ -1658,6 +1721,7 @@ static int __init sprd_pci_ep_dev_init(void)
+ 	sprd_pci_ep_dev_init_debugfs();
+     sipc_init_debugfs();
+ #endif
++    quectel_5g_rmem_init();
+ 	sipc_init();
+ 	spipe_init();
+ 	spool_init();
+diff --git a/pcie/sprd_pcie_quirks.c b/pcie/sprd_pcie_quirks.c
+index 70a3692..933c22d 100644
+--- a/pcie/sprd_pcie_quirks.c
++++ b/pcie/sprd_pcie_quirks.c
+@@ -111,7 +111,7 @@ static void quirk_sprd_pci_resizebar(struct pci_dev *dev)
+ 	pci_read_config_dword(dev, SPRD_PCI_RESIZABLE_BAR4_CTL, &val);
+ 	pci_write_config_dword(dev, SPRD_PCI_RESIZABLE_BAR4_CTL,
+ 				 (val & (~SPRD_PCI_RESIZABLE_BAR_SIZE_MASK)) |
+-				 SPRD_PCI_RESIZABLE_4MB);
++				 SPRD_PCI_RESIZABLE_2MB);
+ 
+ 	for (i = 0; i < SPRD_BAR_NUM; i++) {
+ 		pci_read_config_dword(dev, SPRD_PCI_BAR0 + i * 4, &backup);
+@@ -123,4 +123,4 @@ static void quirk_sprd_pci_resizebar(struct pci_dev *dev)
+ 			__func__, i, SIZE(val));
+ 	}
+ }
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SYNOPSYS,	0xabcd,	quirk_sprd_pci_resizebar);
+\ No newline at end of file
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SYNOPSYS,	0xabcd,	quirk_sprd_pci_resizebar);
+diff --git a/rmem/rmem.c b/rmem/rmem.c
+new file mode 100755
+index 0000000..83019f6
+--- /dev/null
++++ b/rmem/rmem.c
+@@ -0,0 +1,119 @@
++#include <linux/of_address.h>
++#include <linux/of_platform.h>
++#include <linux/of_device.h>
++#include <linux/of_reserved_mem.h>
++#include <linux/regmap.h>
++#include <linux/iommu.h>
++#include <linux/memblock.h>
++#include <linux/module.h>
++
++static phys_addr_t quectel_reserved_5g_mem = 0;
++
++phys_addr_t get_quectel_5g_rmem(void)
++{
++  return quectel_reserved_5g_mem;
++}
++EXPORT_SYMBOL(get_quectel_5g_rmem);
++
++static int rmem_alloc_memory_region(struct device *dev)
++{
++	struct device_node *np = dev->of_node;
++	struct device_node *node;
++	struct reserved_mem *rmem;
++
++	dev_info(dev, "rmem_alloc_memory_region\n");
++	node = of_parse_phandle(np, "memory-region", 0);
++        if (!node) {
++                dev_err(dev, "no such memory-region\n");
++                return -ENODEV;
++        }
++
++	dev_info(dev, "lookup node\n");
++	rmem = of_reserved_mem_lookup(node);
++	of_node_put(node);
++        if (!rmem) {
++                dev_err(dev, "failed to acquire memory region\n");
++                return -EINVAL;
++        }
++
++#if 0
++	/* Need to wait for reserved memory to be mapped */
++        if (!rmem->priv) {
++                dev_err(dev, "need to wait for reserved memory to be mapped\n");
++                return -EPROBE_DEFER;
++        }
++	    struct device_node *np;
++    struct resource r;
++    int ret;
++
++    np = of_parse_phandle(dev->of_node, name, 0); 
++    if (!np) {
++        dev_err(dev, "No %s specified\n", name);
++        return -EINVAL;
++    }   
++
++    ret = of_address_to_resource(np, 0, &r);
++    of_node_put(np);
++    if (ret)
++        return ret;
++
++    smem->regions[i].aux_base = (u32)r.start;
++    smem->regions[i].size = resource_size(&r);
++    smem->regions[i].virt_base = devm_ioremap_wc(dev, r.start, resource_size(&r));
++    if (!smem->regions[i].virt_base)
++        return -ENOMEM;	
++
++
++#endif
++
++        if (!rmem->base || !rmem->size) {
++                dev_err(dev, "unexpected reserved memory, start=0x%0llX, size=0x%0llX\n", rmem->base, rmem->size);
++                return -EINVAL;
++        }
++
++	dev_info(dev, "map memory region: start=0x%0llX, size=0x%0llX\n",
++        	rmem->base, rmem->size);
++	quectel_reserved_5g_mem = rmem->base;
++	return 0;
++}
++
++static int quectel_5g_rmem_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++
++	dev_info(dev, "quectel 5g rmem probe\n");
++	quectel_reserved_5g_mem = 0;
++	return rmem_alloc_memory_region(dev);
++}
++
++static const struct of_device_id quectel_5g_rmem_of_match[] = {
++	{ .compatible = "quectel,quectel-5g-rmem", },
++	{ }
++};
++
++static struct platform_driver quectel_5g_rmem_driver = {
++	.probe = quectel_5g_rmem_probe,
++	.driver	= {
++                .owner = THIS_MODULE,
++		.name = "quectel-5g-rmem",
++		.of_match_table	= quectel_5g_rmem_of_match,
++	},
++};
++
++int quectel_5g_rmem_init(void)
++{
++        return platform_driver_register(&quectel_5g_rmem_driver);
++}
++EXPORT_SYMBOL_GPL(quectel_5g_rmem_init);
++//module_init(quectel_5g_rmem_init);
++
++void quectel_5g_rmem_exit(void)
++{
++        return platform_driver_unregister(&quectel_5g_rmem_driver);
++}
++EXPORT_SYMBOL_GPL(quectel_5g_rmem_exit);
++//module_exit(quectel_5g_rmem_exit);
++
++MODULE_AUTHOR("neil <neil.shi@quectel.com>");
++MODULE_DESCRIPTION("quectel 5g reserved memory");
++MODULE_LICENSE("GPL v2");
+diff --git a/sipa/sipa_skb_recv.c b/sipa/sipa_skb_recv.c
+index 966b810..79b075f 100644
+--- a/sipa/sipa_skb_recv.c
++++ b/sipa/sipa_skb_recv.c
+@@ -38,8 +38,8 @@
+ #include <linux/of_device.h>
+ #include <linux/version.h>
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION( 4,4,60 ))
+-#include <uapi/linux/sched/types.h>
+-#include <linux/sched/task.h>
++//#include <uapi/linux/sched/types.h>
++//#include <linux/sched/task.h>
+ #endif
+ 
+ 
+diff --git a/sipa/sipa_skb_send.c b/sipa/sipa_skb_send.c
+index 387c709..b162208 100644
+--- a/sipa/sipa_skb_send.c
++++ b/sipa/sipa_skb_send.c
+@@ -25,8 +25,8 @@
+ #include <linux/of_device.h>
+ #include <linux/version.h>
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION( 4,4,60 ))
+-#include <uapi/linux/sched/types.h>
+-#include <linux/sched/task.h>
++//#include <uapi/linux/sched/types.h>
++//#include <linux/sched/task.h>
+ #endif
+ 
+ #include "sipa_phy_v0/sipa_fifo_phy.h"
+diff --git a/sipc/sblock.c b/sipc/sblock.c
+index 730f531..168017e 100644
+--- a/sipc/sblock.c
++++ b/sipc/sblock.c
+@@ -29,8 +29,8 @@
+ #include <linux/sched.h>
+ #include <linux/version.h>
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION( 4,4,60 ))
+-#include <uapi/linux/sched/types.h>
+-#include <linux/sched/task.h>
++//#include <uapi/linux/sched/types.h>
++//#include <linux/sched/task.h>
+ #endif
+ 
+ #include "../include/sipc.h"
+@@ -253,7 +253,7 @@ static int sblock_host_init(struct smsg_ipc *sipc, struct sblock_mgr *sblock,
+ 		/* for pool */
+ 		(txblocknum + rxblocknum) * sizeof(struct sblock_blks);
+ 
+-	sblock->smem_addr = smem_alloc(dst, sblock->smem_size);
++	sblock->smem_addr = sprd_smem_alloc(dst, sblock->smem_size);
+ 	if (!sblock->smem_addr) {
+ 		pr_err("%s: channel %d-%d, Failed to alloc smem for sblock\n",
+ 		       __func__,
+@@ -501,7 +501,7 @@ static int sblock_client_init(struct smsg_ipc *sipc, struct sblock_mgr *sblock)
+ 		/* for pool */
+ 		(txblocknum + rxblocknum) * sizeof(struct sblock_blks);
+ 
+-	sblock->smem_addr_debug = smem_alloc(dst, sblock->smem_size);
++	sblock->smem_addr_debug = sprd_smem_alloc(dst, sblock->smem_size);
+ 	if (!sblock->smem_addr_debug) {
+ 		pr_err("%s: channel %d-%d, Failed to allocate smem\n",
+ 		       __func__,
+diff --git a/sipc/sbuf.c b/sipc/sbuf.c
+index 2a50b72..2b47bca 100644
+--- a/sipc/sbuf.c
++++ b/sipc/sbuf.c
+@@ -29,8 +29,8 @@
+ #include <linux/sched.h>
+ #include <linux/version.h>
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION( 4,4,60 ))
+-#include <uapi/linux/sched/types.h>
+-#include <linux/sched/task.h>
++//#include <uapi/linux/sched/types.h>
++//#include <linux/sched/task.h>
+ #endif
+ 
+ #include "../include/sipc.h"
+@@ -320,7 +320,7 @@ static int sbuf_host_init(struct smsg_ipc *sipc, struct sbuf_mgr *sbuf,
+ 	hsize = sizeof(struct sbuf_smem_header) +
+ 		sizeof(struct sbuf_ring_header) * bufnum;
+ 	sbuf->smem_size = hsize + (txbufsize + rxbufsize) * bufnum;
+-	sbuf->smem_addr = smem_alloc(dst, sbuf->smem_size);
++	sbuf->smem_addr = sprd_smem_alloc(dst, sbuf->smem_size);
+ 	if (!sbuf->smem_addr) {
+ 		pr_err("%s: channel %d-%d, Failed to allocate smem for sbuf\n",
+ 			__func__, sbuf->dst, sbuf->channel);
+@@ -456,7 +456,7 @@ static int sbuf_client_init(struct smsg_ipc *sipc, struct sbuf_mgr *sbuf)
+ 	shmem_ram_unmap(dst, sbuf->smem_virt);
+ 
+ 	/* alloc debug smem */
+-	sbuf->smem_addr_debug = smem_alloc(dst, sbuf->smem_size);
++	sbuf->smem_addr_debug = sprd_smem_alloc(dst, sbuf->smem_size);
+ 	if (!sbuf->smem_addr_debug) {
+ 		pr_err("%s: channel %d-%d,Failed to allocate debug smem for sbuf\n",
+ 			__func__, sbuf->dst, sbuf->channel);
+diff --git a/sipc/sipc.c b/sipc/sipc.c
+index ee256fa..32ceaa1 100644
+--- a/sipc/sipc.c
++++ b/sipc/sipc.c
+@@ -299,6 +299,7 @@ static int sipc_parse_dt(struct smsg_ipc *ipc,
+ 	return 0;
+ }
+ #else
++/*
+ static u32 sipc_get_smem_base(size_t size)
+ {
+ 	unsigned long order = get_order(size);
+@@ -331,7 +332,9 @@ static u32 sipc_get_smem_base(size_t size)
+ 		return __pa(ptr);
+ 	}
+ }
++*/
+ 
++extern phys_addr_t get_quectel_5g_rmem(void);
+ static int sipc_parse_dt(struct smsg_ipc *ipc,
+ 	struct device_node *np, struct device *dev)
+ {
+@@ -375,7 +378,8 @@ static int sipc_parse_dt(struct smsg_ipc *ipc,
+ 	pr_info("sipc: smem_type = %d\n", ipc->smem_type);
+ 
+ 	/* get smem info */
+-    val[0] = sipc_get_smem_base(0x0300000);
++    //val[0] = sipc_get_smem_base(0x0300000);
++    val[0] = get_quectel_5g_rmem();
+     val[1] = val[0];
+     val[2] = 0x0300000;
+ 	ipc->smem_base = val[0];
+@@ -521,4 +525,4 @@ void sipc_exit(void)
+ 	platform_device_unregister(&sipc_device);
+ #endif
+ }
+-EXPORT_SYMBOL_GPL(sipc_exit);
+\ No newline at end of file
++EXPORT_SYMBOL_GPL(sipc_exit);
+diff --git a/sipc/smem.c b/sipc/smem.c
+index 12640c2..3910d0c 100644
+--- a/sipc/smem.c
++++ b/sipc/smem.c
+@@ -138,14 +138,11 @@ static void *soc_modem_ram_vmap(phys_addr_t start, size_t size, int noncached)
+ 		addr = page_start + i * PAGE_SIZE;
+ 		pages[i] = pfn_to_page(addr >> PAGE_SHIFT);
+ 	}
+-
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION( 5,10,0 ))
+ 	vaddr = vm_map_ram(pages, page_count, -1, prot);
+ #else
+ 	vaddr = vmap(pages, page_count, -1, prot);
+-	//vaddr = vm_map_ram(pages, page_count, -1);
+ #endif
+-    
+ 	kfree(pages);
+ 
+ 	if (!vaddr) {
+@@ -359,7 +356,7 @@ int smem_get_area(u8 dst, u32 *base, u32 *size)
+ }
+ EXPORT_SYMBOL_GPL(smem_get_area);
+ 
+-u32 smem_alloc(u8 dst, u32 size)
++u32 sprd_smem_alloc(u8 dst, u32 size)
+ {
+ 	struct smem_pool *spool;
+ 	struct smem_record *recd;
+@@ -400,7 +397,7 @@ u32 smem_alloc(u8 dst, u32 size)
+ 
+ 	return addr;
+ }
+-EXPORT_SYMBOL_GPL(smem_alloc);
++EXPORT_SYMBOL_GPL(sprd_smem_alloc);
+ 
+ void smem_free(u8 dst, u32 addr, u32 size)
+ {
+diff --git a/sipc/smsg.c b/sipc/smsg.c
+index 051800d..545a24f 100644
+--- a/sipc/smsg.c
++++ b/sipc/smsg.c
+@@ -353,7 +353,7 @@ static int smsg_ipc_smem_init(struct smsg_ipc *ipc)
+ 	}
+ 
+ 	if (ipc->type != SIPC_BASE_MBOX) {
+-		ipc->ring_base = smem_alloc(ipc->dst, SZ_4K);
++		ipc->ring_base = sprd_smem_alloc(ipc->dst, SZ_4K);
+ 		ipc->ring_size = SZ_4K;
+ 		pr_info("%s: ring_base = 0x%x, ring_size = 0x%x\n",
+ 				__func__,

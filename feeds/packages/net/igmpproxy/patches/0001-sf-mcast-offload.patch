@@ -1,0 +1,522 @@
+diff --git a/src/igmpproxy.c b/src/igmpproxy.c
+index c72a567..9eee5f1 100644
+--- a/src/igmpproxy.c
++++ b/src/igmpproxy.c
+@@ -51,6 +51,8 @@ static const char Usage[] =
+ "   -n   Do not run as a daemon\n"
+ "   -d   Run in debug mode. Output all messages on stderr. Implies -n.\n"
+ "   -v   Be verbose. Give twice to see even debug messages.\n"
++"   -w   HW offload delay, in ms, 0 = no delay.\n"
++"   -x   Disable HW offload\n"
+ "\n"
+ PACKAGE_STRING "\n"
+ ;
+@@ -71,6 +73,12 @@ static int sighandled = 0;
+ // Holds the indeces of the upstream IF...
+ int     upStreamIfIdx[MAX_UPS_VIFS];
+ 
++extern uint32_t hwoffload_delay;
++extern uint32_t sf_offload_disable;
++
++int sf_mcast_ubus_init(void);
++int sf_mcast_clear(void);
++
+ /**
+ *   Program main method. Is invoked when the program is started
+ *   on commandline. The number of commandline arguments, and a
+@@ -84,7 +92,7 @@ int main( int ArgCn, char *ArgVc[] ) {
+     srand(time(NULL) * getpid());
+ 
+     // Parse the commandline options and setup basic settings..
+-    while ((c = getopt(ArgCn, ArgVc, "vdnh")) != -1) {
++    while ((c = getopt(ArgCn, ArgVc, "xvdnhw:")) != -1) {
+         switch (c) {
+         case 'n':
+             NotAsDaemon = true;
+@@ -103,6 +111,21 @@ int main( int ArgCn, char *ArgVc[] ) {
+             fputs(Usage, stderr);
+             exit(0);
+             break;
++        case 'x':
++            sf_offload_disable = 1;
++            break;
++        case 'w': {
++            uint32_t v;
++
++            if (sscanf(optarg, "%u", &v) != 1) {
++                fprintf(stderr, "invalid value: %s\n", optarg);
++                exit(1);
++            }
++
++            hwoffload_delay = v;
++
++            break;
++        }
+         default:
+             exit(1);
+             break;
+@@ -154,6 +177,11 @@ int main( int ArgCn, char *ArgVc[] ) {
+             }
+         }
+ 
++        if (!sf_offload_disable) {
++            sf_mcast_ubus_init();
++            sf_mcast_clear();
++        }
++
+         // Go to the main loop.
+         igmpProxyRun();
+ 
+diff --git a/src/mroute-api.c b/src/mroute-api.c
+index 478ae3b..34b7874 100644
+--- a/src/mroute-api.c
++++ b/src/mroute-api.c
+@@ -250,3 +250,11 @@ int getVifIx( struct IfDesc *IfDp )
+ 
+     return -1;
+ }
++
++struct IfDesc *getVifByIx( unsigned idx )
++{
++    if (idx >= sizeof(VifDescVc) / sizeof(VifDescVc[0]))
++        return NULL;
++
++    return VifDescVc[idx].IfDp;
++}
+diff --git a/src/rttable.c b/src/rttable.c
+index 2593eca..cb07a81 100644
+--- a/src/rttable.c
++++ b/src/rttable.c
+@@ -40,8 +40,18 @@
+ 
+ #include "igmpproxy.h"
+ 
++#include <sys/time.h>
++#include <sys/syscall.h>
++#include <arpa/inet.h>
++
++#include <libubus.h>
++
+ #define MAX_ORIGINS 4
+ 
++#define MAX_DOWNSTREAM_HOSTS 16
++
++#define HW_OFFLOAD_DELAY_MS (10 * 1000)
++
+ /**
+ *   Routing table structure definition. Double linked list...
+ */
+@@ -52,6 +62,10 @@ struct RouteTable {
+     uint32_t            originAddrs[MAX_ORIGINS]; // The origin adresses (only set on activated routes)
+     uint32_t            vifBits;        // Bits representing recieving VIFs.
+ 
++    // TODO: TRACK HW OFF-LOAD RULES
++
++    uint64_t            first_time;     // FIXME: workaround, wait for a while before offloading
++
+     // Keeps the upstream membership state...
+     short               upstrState;     // Upstream membership state.
+     int                 upstrVif;       // Upstream Vif Index.
+@@ -61,6 +75,13 @@ struct RouteTable {
+     int                 ageValue;       // Downcounter for death.
+     int                 ageActivity;    // Records any acitivity that notes there are still listeners.
+ 
++    // Track downstream hosts IP & Vif
++    struct {
++                        uint32_t ip;
++                        int32_t vif;
++    } downstream_hosts[MAX_DOWNSTREAM_HOSTS];
++    uint8_t             downstream_hosts_cnt;
++
+     // Keeps downstream hosts information
+     uint32_t            downstreamHostsHashSeed;
+     uint8_t             downstreamHostsHashTable[];
+@@ -75,11 +96,321 @@ void logRouteTable(const char *header);
+ int internAgeRoute(struct RouteTable *croute);
+ int internUpdateKernelRoute(struct RouteTable *route, int activate);
+ 
++uint32_t hwoffload_delay = HW_OFFLOAD_DELAY_MS;
++uint32_t sf_offload_disable = 0;
++
++uint64_t milli_time_get(void)
++{
++        struct timespec t = { 0, 0 };
++        syscall(SYS_clock_gettime, CLOCK_MONOTONIC, &t);
++        return ((uint64_t)t.tv_sec) * 1000 + ((uint64_t)t.tv_nsec) / 1000000;
++}
++
++extern struct IfDesc *getVifByIx(unsigned idx);
++
++#define MACST_UBUS_OBJ "npu.l3_mcast"
++#define MCAST_MARK "igmp_proxy"
++
++enum {
++    SF_MCAST_ADD = 0,
++    SF_MCAST_DEL,
++    NUM_SF_MCAST_OPS,
++};
++
++static struct ubus_context *ctx;
++
++// static void ubus_reconnect_timer(struct uloop_timeout *timeout)
++// {
++//     static struct uloop_timeout retry = {
++//         .cb = ubus_reconnect_timer,
++//     };
++
++//     int sec = 2;
++
++//     if (ubus_reconnect(ctx, NULL) != 0) {
++//         fprintf(stderr, "%s(): failed to re-connect to ubus\n", __func__);
++//         uloop_timeout_set(&retry, sec * 1000);
++//         return;
++//     }
++
++//     fprintf(stderr, "%s(): ubus reconnected\n", __func__);
++// }
++
++// static void ubus_connection_lost(struct ubus_context *ctx)
++// {
++//     ubus_reconnect_timer(NULL);
++// }
++
++int sf_mcast_ubus_init(void)
++{
++    ctx = ubus_connect(NULL);
++    if (!ctx) {
++        fprintf(stderr, "%s(): failed to connect to ubus\n", __func__);
++        return -ENOENT;
++    }
++
++    // ctx->connection_lost = ubus_connection_lost;
++
++    return 0;
++}
++
++static void sf_mcast_ubus_ret(struct ubus_request *req, int type, struct blob_attr *msg)
++{
++    static const struct blobmsg_policy policy = {
++        .name = "error",
++        .type = BLOBMSG_TYPE_INT32
++    };
++    struct blob_attr *tb[1];
++    int error;
++
++    blobmsg_parse(&policy, 1, tb, blob_data(msg), blob_len(msg));
++
++    error = (int)blobmsg_get_u32(tb[0]);
++
++    if (error != 0)
++        fprintf(stderr, "%s(): ubus method returned: %d\n" , __func__, error);
++}
++
++static int sf_mcast_blob_make(struct blob_buf *b,
++                              struct RouteTable *rt,
++                              uint32_t src_addr,
++                              uint32_t up_vif,
++                              uint32_t down_vifs)
++{
++    int err;
++
++    blob_buf_init(b, 0);
++
++    blobmsg_add_string(b, "mark", MCAST_MARK);
++
++    {
++        char sip[INET6_ADDRSTRLEN] = { };
++        char dip[INET6_ADDRSTRLEN] = { };
++
++        inet_ntop(AF_INET, &src_addr, sip, sizeof(sip));
++        inet_ntop(AF_INET, &rt->group, dip, sizeof(dip));
++
++        blobmsg_add_string(b, "src", sip);
++        blobmsg_add_string(b, "dst", dip);
++
++        fprintf(stderr, "%s(): src: %s dst: %s\n", __func__, sip, dip);
++    }
++
++    {
++        struct IfDesc *iif = getVifByIx(up_vif);
++
++        if (!iif) {
++            fprintf(stderr, "%s(): iif getVifByIx() failed, idx: %d\n", __func__, up_vif);
++            goto err;
++        }
++
++        blobmsg_add_string(b, "iif", iif->Name);
++
++        fprintf(stderr, "%s(): iif: %s up_vif: %d\n", __func__, iif->Name, up_vif);
++    }
++
++    {
++        void *arr = blobmsg_open_array(b, "oif");
++
++        fprintf(stderr, "%s(): down_vifs bitmap: 0x%08x\n", __func__, down_vifs);
++
++        // sizeof(rttbl->vifBits) * 8: 32 bits
++        // MAX_IF = 40
++        for (int i = 0; i < sizeof(down_vifs) * 8; i++) {
++            if (BIT_TST(down_vifs, i)) {
++                struct IfDesc *oif = getVifByIx(i);
++
++                if (!oif) {
++                    fprintf(stderr, "%s(): oif getVifByIx() failed, idx: %d\n", __func__, i);
++                    goto err;
++                }
++
++                blobmsg_add_string(b, NULL, oif->Name);
++
++                fprintf(stderr, "%s(): oif: %s\n", __func__, oif->Name);
++            }
++        }
++
++        blobmsg_close_array(b, arr);
++    }
++
++    return 0;
++
++err:
++    blob_buf_free(b);
++
++    return -ENOENT;
++}
++
++static int downstream_host_get(struct RouteTable *rttbl, uint32_t addr)
++{
++    for (int i = 0; i < rttbl->downstream_hosts_cnt && i < ARRAY_SIZE(rttbl->downstream_hosts); i++) {
++        if (addr == rttbl->downstream_hosts[i].ip) {
++            return i;
++        }
++    }
++
++    return -1;
++}
++
++static int is_upstream_joined(struct RouteTable *rttbl)
++{
++    for (int i = 0; i < ARRAY_SIZE(rttbl->originAddrs); i++) {
++        uint32_t addr = rttbl->originAddrs[i];
++
++        if (addr == 0)
++            continue;
++
++        if (downstream_host_get(rttbl, addr) < 0)
++            return 1;
++    }
++
++    return 0;
++}
++
++static int sf_mcast_op(unsigned op, struct RouteTable *rttbl, uint32_t src_addr)
++{
++    static const char *method[] = {
++        [SF_MCAST_ADD] = "add",
++        [SF_MCAST_DEL] = "del",
++    };
++    struct blob_buf b = { };
++    uint32_t id;
++    int dnstr_host = -1;
++    int dnstr_bitmap = rttbl->vifBits;
++    int upstr_vif = rttbl->upstrVif;
++    int err;
++
++    if (!ctx)
++        return -EINVAL;
++
++    if (op > NUM_SF_MCAST_OPS)
++        return -EINVAL;
++
++    fprintf(stderr, "%s(): %s %s rt_state: %d\n", __func__,
++            method[op], inet_ntoa((struct in_addr){src_addr}), rttbl->upstrState);
++
++    // wait until upstream joined
++    if (!is_upstream_joined(rttbl))
++        return 0;
++
++    if (ubus_lookup_id(ctx, MACST_UBUS_OBJ, &id)) {
++        fprintf(stderr, "%s(): %s is not found\n", __func__, MACST_UBUS_OBJ);
++        return -ENOENT;
++    }
++
++    if (op == SF_MCAST_ADD && hwoffload_delay) {
++        if (rttbl->first_time == 0) {
++            rttbl->first_time = milli_time_get();
++            fprintf(stderr, "%s(): first_time: %ju\n", __func__, rttbl->first_time);
++
++            return 0;
++        } else {
++            uint64_t t = milli_time_get() - rttbl->first_time;
++
++            if (t < hwoffload_delay) {
++                fprintf(stderr, "%s(): delayed, first: %ju curr: %ju spent: %ju \n",
++                        __func__, rttbl->first_time, milli_time_get(), t);
++
++                return 0;
++            }
++        }
++    }
++
++    dnstr_host = downstream_host_get(rttbl, src_addr);
++
++    // if is downstream host
++    if (dnstr_host >= 0) {
++        upstr_vif = rttbl->downstream_hosts[dnstr_host].vif;
++        dnstr_bitmap = 1UL << rttbl->upstrVif;
++    }
++
++    if ((err = sf_mcast_blob_make(&b, rttbl, src_addr, upstr_vif, dnstr_bitmap))) {
++        fprintf(stderr, "%s(): failed to make ubus message\n", __func__);
++        return err;
++    }
++
++    if ((err = ubus_invoke(ctx, id, method[op], b.head, sf_mcast_ubus_ret, NULL, 2000))) {
++        fprintf(stderr, "%s(): ubus_invoke() failed, ubus status code: %d\n", __func__, err);
++        return err;
++    }
++
++    return 0;
++}
++
++int sf_mcast_clear(void)
++{
++    struct blob_buf b = { };
++    uint32_t id;
++    int err;
++
++    if (!ctx)
++        return -EINVAL;
++
++    if (ubus_lookup_id(ctx, MACST_UBUS_OBJ, &id)) {
++        fprintf(stderr, "%s(): %s is not found\n", __func__, MACST_UBUS_OBJ);
++        return -ENOENT;
++    }
++
++    blob_buf_init(&b, 0);
++
++    blobmsg_add_string(&b, "mark", MCAST_MARK);
++
++    if ((err = ubus_invoke(ctx, id, "del_marked", b.head, NULL, NULL, 2000)))
++        fprintf(stderr, "%s(): ubus_invoke() failed, ubus status code: %d\n", __func__, err);
++
++    return err;
++}
+ 
+ /**
+ *   Functions for downstream hosts hash table
+ */
+ 
++static void downstream_host_add(struct RouteTable *rt, uint32_t host, int vif)
++{
++    int i;
++
++    fprintf(stderr, "%s(): host: 0x%08x %s vif: %d\n", __func__, host, inet_ntoa((struct in_addr){host}), vif);
++
++    if (host == 0 || vif < 0 || rt->downstream_hosts_cnt >= ARRAY_SIZE(rt->downstream_hosts))
++        return;
++
++    for (i = 0; i < rt->downstream_hosts_cnt && i < ARRAY_SIZE(rt->downstream_hosts); i++) {
++        if (rt->downstream_hosts[i].ip == host)
++            return;
++    }
++
++    if (i >= ARRAY_SIZE(rt->downstream_hosts))
++        return;
++
++    rt->downstream_hosts[rt->downstream_hosts_cnt++].ip = host;
++    rt->downstream_hosts[rt->downstream_hosts_cnt++].vif = vif;
++}
++
++static void downstream_host_del(struct RouteTable *rt, uint32_t host)
++{
++    fprintf(stderr, "%s(): host: 0x%08x %s\n", __func__, host, inet_ntoa((struct in_addr){host}));
++
++    if (host == 0 || rt->downstream_hosts_cnt == 0)
++        return;
++
++    for (int i = 0; i < rt->downstream_hosts_cnt && i < ARRAY_SIZE(rt->downstream_hosts); i++) {
++        if (rt->downstream_hosts[i].ip == host) {
++            rt->downstream_hosts[i].ip = 0;
++            rt->downstream_hosts[i].vif = -1;
++            rt->downstream_hosts_cnt--;
++
++            return;
++        }
++    }
++}
++
++static void downstream_host_reset(struct RouteTable *rt)
++{
++    memset(rt->downstream_hosts, 0, sizeof(rt->downstream_hosts));
++    rt->downstream_hosts_cnt = 0;
++}
++
+ // MurmurHash3 32bit hash function by Austin Appleby, public domain
+ static uint32_t murmurhash3(uint32_t x) {
+     x ^= x >> 16;
+@@ -237,6 +568,8 @@ void clearAllRoutes(void) {
+     }
+     routing_table = NULL;
+ 
++    sf_mcast_clear();
++
+     // Send a notice that the routing table is empty...
+     my_log(LOG_NOTICE, 0, "All routes removed. Routing table is empty.");
+ }
+@@ -267,6 +600,9 @@ int insertRoute(uint32_t group, int ifx, uint32_t src) {
+     struct Config *conf = getCommonConfig();
+     struct RouteTable*  croute;
+ 
++    fprintf(stderr, "%s(): group: %s\n", __func__, inet_ntoa((struct in_addr){group}));
++    fprintf(stderr, "%s(): ifx: %d %s src: %s\n", __func__, ifx, ifx >= 0 ? getVifByIx(ifx)->Name : "unknown", inet_ntoa((struct in_addr){src}));
++
+     // Sanitycheck the group adress...
+     if( ! IN_MULTICAST( ntohl(group) )) {
+         my_log(LOG_WARNING, 0, "The group address %s is not a valid Multicast group. Table insert failed.",
+@@ -297,6 +633,8 @@ int insertRoute(uint32_t group, int ifx, uint32_t src) {
+         newroute->nextroute  = NULL;
+         newroute->prevroute  = NULL;
+         newroute->upstrVif   = -1;
++        newroute->downstream_hosts_cnt = 0;
++        memset(newroute->downstream_hosts, 0, sizeof(newroute->downstream_hosts));
+ 
+         if(conf->fastUpstreamLeave) {
+             // Init downstream hosts bit hash table
+@@ -306,6 +644,9 @@ int insertRoute(uint32_t group, int ifx, uint32_t src) {
+             setDownstreamHost(conf, newroute, src);
+         }
+ 
++        downstream_host_reset(newroute);
++        downstream_host_add(newroute, src, ifx);
++
+         // The group is not joined initially.
+         newroute->upstrState = ROUTESTATE_NOTJOINED;
+ 
+@@ -386,6 +727,8 @@ int insertRoute(uint32_t group, int ifx, uint32_t src) {
+             setDownstreamHost(conf, croute, src);
+         }
+ 
++        downstream_host_add(croute, src, ifx);
++
+         // Log the cleanup in debugmode...
+         my_log(LOG_INFO, 0, "Updated route entry for %s on VIF #%d",
+             inetFmt(croute->group, s1), ifx);
+@@ -536,6 +879,7 @@ void setRouteLastMemberMode(uint32_t group, uint32_t src) {
+         if(croute->upstrState == ROUTESTATE_JOINED) {
+             // Remove downstream host from route
+             clearDownstreamHost(conf, croute, src);
++            downstream_host_del(croute, src);
+         }
+ 
+         // Do route state check if there is no downstream host in hash table
+@@ -750,9 +1094,11 @@ int internUpdateKernelRoute(struct RouteTable *route, int activate) {
+         if(activate) {
+             // Add route in kernel...
+             addMRoute( &mrDesc );
++            sf_mcast_op(SF_MCAST_ADD, route, route->originAddrs[i]);
+         } else {
+             // Delete the route from Kernel...
+             delMRoute( &mrDesc );
++            sf_mcast_op(SF_MCAST_DEL, route, route->originAddrs[i]);
+         }
+     }
+ 

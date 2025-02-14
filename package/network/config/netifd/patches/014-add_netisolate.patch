@@ -1,0 +1,154 @@
+Index: netifd-2022-02-20-136006b8/device.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/device.c
++++ netifd-2022-02-20-136006b8/device.c
+@@ -66,6 +66,7 @@ static const struct blobmsg_policy dev_a
+ 	[DEV_ATTR_DUPLEX] = { .name = "duplex", .type = BLOBMSG_TYPE_BOOL },
+ 	[DEV_ATTR_GROUP] = { .name = "group", .type = BLOBMSG_TYPE_INT32 },
+         [DEV_ATTR_BRINPUT_DISABLE] = { .name = "disable_input", .type = BLOBMSG_TYPE_BOOL },
++	[DEV_ATTR_NETISOLATE] = { .name = "netisolate", .type = BLOBMSG_TYPE_BOOL },
+ };
+ 
+ const struct uci_blob_param_list device_attr_list = {
+@@ -286,6 +287,7 @@ device_merge_settings(struct device *dev
+ 	n->flags = s->flags | os->flags | os->valid_flags;
+ 	n->group = s->group;
+         n->disable_input = s->disable_input;
++	n->netisolate = s->netisolate;
+ }
+ 
+ void
+@@ -479,6 +481,12 @@ device_init_settings(struct device *dev,
+                 s->flags |= DEV_OPT_BRINPUT_DISABLE;
+         }
+ 
++	if ((cur = tb[DEV_ATTR_NETISOLATE])) {
++                 s->netisolate = blobmsg_get_bool(cur);
++                 s->flags |= DEV_OPT_NETISOLATE;
++         }
++
++
+ 	device_set_disabled(dev, disabled);
+ }
+ 
+@@ -1236,6 +1244,8 @@ device_dump_status(struct blob_buf *b, s
+                         blobmsg_add_u32(b, "group", st.group);
+                 if (st.flags & DEV_OPT_BRINPUT_DISABLE)
+                         blobmsg_add_u32(b, "disableinput", st.disable_input);
++		if (st.flags & DEV_OPT_NETISOLATE)
++                        blobmsg_add_u32(b, "netisolate", st.netisolate);
+ 	}
+ 
+ 	s = blobmsg_open_table(b, "statistics");
+Index: netifd-2022-02-20-136006b8/device.h
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/device.h
++++ netifd-2022-02-20-136006b8/device.h
+@@ -64,6 +64,7 @@ enum {
+ 	DEV_ATTR_DUPLEX,
+ 	DEV_ATTR_GROUP,
+         DEV_ATTR_BRINPUT_DISABLE,
++	DEV_ATTR_NETISOLATE,
+ 	__DEV_ATTR_MAX,
+ };
+ 
+@@ -130,6 +131,7 @@ enum {
+ 	DEV_OPT_DUPLEX			= (1ULL << 31),
+ 	DEV_OPT_GROUP                   = (1ULL << 32),
+         DEV_OPT_BRINPUT_DISABLE         = (1ULL << 33),
++	DEV_OPT_NETISOLATE              = (1ULL << 34),
+ };
+ 
+ /* events broadcasted to all users of a device */
+@@ -208,7 +210,8 @@ struct device_settings {
+ 	unsigned int speed;
+ 	bool duplex;
+ 	unsigned int group;
+-         bool disable_input;
++        bool disable_input;
++	bool netisolate;
+ };
+ 
+ /*
+Index: netifd-2022-02-20-136006b8/system-linux.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/system-linux.c
++++ netifd-2022-02-20-136006b8/system-linux.c
+@@ -462,6 +462,12 @@ static void system_bridge_set_disable_in
+ 	system_set_dev_sysctl("dev->ifname", "disableinput", "brport", val);
+ }
+ 
++static void system_bridge_set_netisolate(struct device *dev, const char *val)
++{
++//      system_set_dev_sysctl("/sys/class/net/%s/brport/netisolate", dev->ifname, val);
++	system_set_dev_sysctl("dev->ifname", "netisolate", "brport", val);
++}
++
+ static void system_set_sendredirects(struct device *dev, const char *val)
+ {
+ 	system_set_dev_sysctl("ipv4/conf", "send_redirects", dev->ifname, val);
+@@ -1135,6 +1141,10 @@ retry:
+                 system_bridge_set_disable_input(dev, dev->settings.disable_input ? "1" : "0");
+         }
+ 
++	if (dev->settings.flags & DEV_OPT_NETISOLATE) {
++                system_bridge_set_netisolate(dev, dev->settings.netisolate ? "1" : "0");
++        }
++
+ 	if (dev->bpdu_filter)
+ 		system_bridge_set_bpdu_filter(dev, dev->bpdu_filter ? "1" : "0");
+ 
+Index: netifd-2022-02-20-136006b8/wireless.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/wireless.c
++++ netifd-2022-02-20-136006b8/wireless.c
+@@ -66,6 +66,7 @@ enum {
+ 	VIF_ATTR_MODE,
+ 	VIF_ATTR_GROUP,
+ 	VIF_ATTR_BRINPUT_DISABLE,
++	VIF_ATTR_NETISOLATE,
+ 	VIF_ATTR_PROXYARP,
+ 	__VIF_ATTR_MAX,
+ };
+@@ -77,6 +78,7 @@ static const struct blobmsg_policy vif_p
+ 	[VIF_ATTR_MODE] = { .name = "mode", .type = BLOBMSG_TYPE_STRING },
+ 	[VIF_ATTR_GROUP] = { .name = "group", .type = BLOBMSG_TYPE_INT32 },
+         [VIF_ATTR_BRINPUT_DISABLE] = { .name = "disable_input", .type = BLOBMSG_TYPE_BOOL },
++	[VIF_ATTR_NETISOLATE] = { .name = "netisolate", .type = BLOBMSG_TYPE_BOOL },
+ 	[VIF_ATTR_PROXYARP] = { .name = "proxy_arp", .type = BLOBMSG_TYPE_BOOL },
+ };
+ 
+@@ -342,8 +344,10 @@ static void wireless_interface_handle_li
+ 			dev->wireless_ap = vif->ap_mode;
+ 			dev->settings.group = vif->group;
+                         dev->settings.disable_input = vif->disable_input;
++			dev->settings.netisolate = vif->netisolate;
+                         dev->settings.flags |= DEV_OPT_GROUP;
+                         dev->settings.flags |= DEV_OPT_BRINPUT_DISABLE;
++			dev->settings.flags |= DEV_OPT_NETISOLATE;
+ 			dev->bpdu_filter = dev->wireless_ap;
+ 		}
+ 	}
+@@ -822,6 +826,10 @@ wireless_interface_init_config(struct wi
+         if (cur)
+                 vif->disable_input = blobmsg_get_bool(cur);
+ 
++	cur = tb[VIF_ATTR_NETISOLATE];
++        if (cur)
++                vif->netisolate = blobmsg_get_bool(cur);
++
+ 	cur = tb[VIF_ATTR_PROXYARP];
+ 	vif->proxyarp = vif->ap_mode && cur && blobmsg_get_bool(cur);
+ }
+Index: netifd-2022-02-20-136006b8/wireless.h
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/wireless.h
++++ netifd-2022-02-20-136006b8/wireless.h
+@@ -93,6 +93,7 @@ struct wireless_interface {
+ 	bool ap_mode;
+ 	unsigned int group;
+ 	bool disable_input;
++	bool netisolate;
+ };
+ 
+ struct wireless_vlan {

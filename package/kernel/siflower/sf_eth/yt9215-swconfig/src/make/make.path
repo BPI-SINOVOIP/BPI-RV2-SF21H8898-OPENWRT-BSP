@@ -1,0 +1,36 @@
+# Function modules parameter
+export SDK_BASE_PATH=$(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))/..
+SDK_ROOT_PATH = ${SDK_BASE_PATH}
+
+CORE_PATH               = ${SDK_ROOT_PATH}/core
+
+CORE_CMD_PATH           = $(CORE_PATH)/cmd
+CORE_CMD_CLI_PATH       = $(CORE_CMD_PATH)/cli
+CORE_CMD_CLI_CMD_PATH   = $(CORE_CMD_PATH)/cli/cmd
+CORE_CMD_SCRIPT_PATH    = $(CORE_CMD_PATH)/cmd_script
+CORE_INTERNAL_DEBUG_PATH	= $(CORE_CMD_PATH)/internal_debug/$(SWITCH_SERIES)
+
+CORE_API_PATH       = $(CORE_PATH)/yt
+CORE_CAL_PATH       = $(CORE_PATH)/cal
+CORE_FAL_PATH       = $(CORE_PATH)/fal
+FAL_PATH_TIGER		= $(CORE_FAL_PATH)/tiger
+CORE_HAL_PATH       = $(CORE_PATH)/hal
+CORE_DRV_PATH       = $(CORE_PATH)/drv
+CORE_SW_CTRL_PATH   = $(CORE_DRV_PATH)/sw_ctrl
+CTRL_PATH_CTRLIF    = $(CORE_SW_CTRL_PATH)/ctrlif
+CORE_EDMA_PATH      = $(CORE_DRV_PATH)/edma
+CORE_FAL_PROJECT_PATH   = $(CORE_FAL_PATH)/$(SWITCH_SERIES)
+INCLUDE_PATH        = ${SDK_ROOT_PATH}/include
+OSAL_PATH           = ${SDK_ROOT_PATH}/osal
+COMMON_PATH         = ${SDK_ROOT_PATH}/common
+BOARDPROFILE_PATH   = $(COMMON_PATH)/boardprofile
+COMMON_PATH_INC     = $(COMMON_PATH)/include
+COMMON_PATH_SRC     = $(COMMON_PATH)/src
+CORE_CHIP_DEF_PATH   = $(CORE_FAL_PATH)/chipdef
+CORE_MAC_DRV_PATH      = $(CORE_DRV_PATH)/mac
+CORE_PHY_DRV_PATH      = $(CORE_DRV_PATH)/phy
+
+OUTPT_PATH          = ${SDK_ROOT_PATH}/release
+
+# Menuconfig tool parameter
+MENU_CONFIG_TOOL_PATH                 = ./configs

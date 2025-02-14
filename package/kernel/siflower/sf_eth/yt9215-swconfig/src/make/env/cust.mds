@@ -1,0 +1,30 @@
+# included sdk modules
+
+MODULE_SYS              = YES
+MODULE_ACL              = NO
+MODULE_CTRLPKT          = YES
+MODULE_DEBUG            = NO
+MODULE_DOS              = NO
+MODULE_DOT1X            = NO
+MODULE_INTERRUPT        = NO
+MODULE_L2               = YES
+MODULE_LAG              = YES
+MODULE_HW_LOOPDETECT    = NO
+MODULE_PORT_MIRROR      = NO
+MODULE_HW_MULTICAST     = NO
+MODULE_NIC              = NO
+MODULE_OAM              = NO
+MODULE_PORT             = YES
+MODULE_PORT_ISO         = YES
+MODULE_QOS              = YES
+MODULE_RATE             = YES
+MODULE_RMA              = NO
+MODULE_STAT             = YES
+MODULE_STORM_CTRL       = NO
+MODULE_HW_STP           = NO
+MODULE_VLAN             = YES
+MODULE_VLAN_TRANS       = NO
+MODULE_WOL              = NO
+MODULE_LED              = NO
+MODULE_MONITOR          = NO
+MODULE_SENSOR           = NO

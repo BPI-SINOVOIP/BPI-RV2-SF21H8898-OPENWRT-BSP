@@ -1,0 +1,48 @@
+--- a/src/openvpn/dco.c
++++ b/src/openvpn/dco.c
+@@ -471,6 +471,7 @@ dco_p2p_add_new_peer(struct context *c)
+     ASSERT(ls->info.connection_established);
+ 
+     struct sockaddr *remoteaddr = &ls->info.lsa->actual.dest.addr.sa;
++    struct sockaddr *localaddr = NULL;
+     struct tls_multi *multi = c->c2.tls_multi;
+ #ifdef TARGET_FREEBSD
+     /* In Linux in P2P mode the kernel automatically removes an existing peer
+@@ -481,8 +482,11 @@ dco_p2p_add_new_peer(struct context *c)
+         c->c2.tls_multi->dco_peer_id = -1;
+     }
+ #endif
++    if (ls->bind_local && ls->info.lsa->bind_local)
++        localaddr = ls->info.lsa->bind_local->ai_addr;
++
+     int ret = dco_new_peer(&c->c1.tuntap->dco, multi->peer_id,
+-                           c->c2.link_socket->sd, NULL, remoteaddr, NULL, NULL);
++                           c->c2.link_socket->sd, localaddr, remoteaddr, NULL, NULL);
+     if (ret < 0)
+     {
+         return ret;
+@@ -528,7 +532,7 @@ dco_multi_get_localaddr(struct multi_con
+         {
+             struct sockaddr_in *sock_in4 = (struct sockaddr_in *)local;
+ #if defined(HAVE_IN_PKTINFO) && defined(HAVE_IPI_SPEC_DST)
+-            sock_in4->sin_addr = actual->pi.in4.ipi_addr;
++            sock_in4->sin_addr = actual->pi.in4.ipi_spec_dst;
+ #elif defined(IP_RECVDSTADDR)
+             sock_in4->sin_addr = actual->pi.in4;
+ #else
+@@ -594,10 +598,15 @@ dco_multi_add_new_peer(struct multi_cont
+         vpn_addr6 = &c->c2.push_ifconfig_ipv6_local;
+     }
+ 
++    struct link_socket *ls = c->c2.link_socket;
+     if (dco_multi_get_localaddr(m, mi, &local))
+     {
+         localaddr = (struct sockaddr *)&local;
+     }
++    else if (ls->bind_local && ls->info.lsa->bind_local)
++    {
++        localaddr = ls->info.lsa->bind_local->ai_addr;
++    }
+ 
+     int ret = dco_new_peer(&c->c1.tuntap->dco, peer_id, sd, localaddr,
+                            remoteaddr, vpn_addr4, vpn_addr6);

@@ -1,0 +1,141 @@
+{
+	"luci-mod-status-realtime": {
+		"description": "Grant access to realtime statistics",
+		"read": {
+			"ubus": {
+				"luci": [ "getConntrackList", "getRealtimeStats" ],
+				"network.rrdns": [ "lookup" ]
+			}
+		}
+	},
+
+	"luci-mod-status-processes": {
+		"description": "Grant access to process status",
+		"read": {
+			"ubus": {
+				"luci": [ "getProcessList" ]
+			}
+		},
+		"write": {
+			"file": {
+				"/bin/kill": [ "exec" ]
+			},
+			"ubus": {
+				"file": [ "exec" ]
+			}
+		}
+	},
+
+	"luci-mod-status-logs": {
+		"description": "Grant access to system logs",
+		"read": {
+			"cgi-io": [ "exec" ],
+			"file": {
+				"/bin/dmesg -r": [ "exec" ],
+				"/sbin/logread": [ "stat" ],
+				"/sbin/logread -e ^": [ "exec" ],
+				"/usr/sbin/logread": [ "stat" ],
+				"/usr/sbin/logread -e ^": [ "exec" ]
+			},
+			"ubus": {
+				"file": [ "stat" ]
+			}
+		}
+	},
+
+	"luci-mod-status-debug_node_5G": {
+		"description": "Grant access to 5G debug node",
+		"read": {
+			"cgi-io": [ "exec", "download" ],
+			"file": {
+				"/sys/kernel/debug/ieee80211/phy0/siwifi/txq": [ "read" ],
+				"/sys/kernel/debug/ieee80211/phy0/siwifi/hwq": [ "read" ],
+				"/sys/kernel/debug/ieee80211/phy0/siwifi/stats": [ "read" ],
+				"/sys/kernel/debug/ieee80211/phy0/siwifi/lmactx": [ "read" ],
+				"/sys/kernel/debug/ieee80211/phy0/siwifi/lmacrx": [ "read" ],
+				"/sys/kernel/debug/clk/clk_summary": [ "read" ],
+				"/sbin/ifconfig": [ "exec" ],
+				"/usr/bin/iwinfo": [ "exec" ],
+				"/usr/sbin/iw": [ "exec" ],
+				"/sbin/uci get uhttpd.main.proc_disabled": [ "exec" ]
+			},
+			"ubus": {
+				"file": [ "read", "stat" ]
+			},
+			"uci": [ "uhttpd" ]
+		}
+	},
+
+	"luci-mod-status-debug_node_2G": {
+		"description": "Grant access to 2.4G debug node",
+		"read": {
+			"cgi-io": [ "exec", "download" ],
+			"file": {
+				"/sys/kernel/debug/ieee80211/phy1/siwifi/txq": [ "read" ],
+				"/sys/kernel/debug/ieee80211/phy1/siwifi/hwq": [ "read" ],
+				"/sys/kernel/debug/ieee80211/phy1/siwifi/stats": [ "read" ],
+				"/sys/kernel/debug/ieee80211/phy1/siwifi/lmactx": [ "read" ],
+				"/sys/kernel/debug/ieee80211/phy1/siwifi/lmacrx": [ "read" ],
+				"/sys/kernel/debug/clk/clk_summary": [ "read" ],
+				"/sbin/ifconfig": [ "exec" ],
+				"/usr/bin/iwinfo": [ "exec" ],
+				"/usr/sbin/iw wlan1 station dump": [ "exec" ],
+				"/sbin/uci get uhttpd.main.proc_disabled": [ "exec" ]
+			},
+			"ubus": {
+				"file": [ "read", "stat" ]
+			},
+			"uci": [ "uhttpd" ]
+		}
+	},
+
+	"luci-mod-status-routes": {
+		"description": "Grant access to routing status",
+		"read": {
+			"file": {
+				"/sbin/ip -[46] neigh show": [ "exec" ],
+				"/sbin/ip -[46] route show table all": [ "exec" ],
+				"/sbin/ip -[46] rule show": [ "exec" ]
+			},
+			"ubus": {
+				"file": [ "exec" ]
+			}
+		}
+	},
+
+	"luci-mod-status-channel_analysis": {
+		"description": "Grant access to wireless channel status",
+		"read": {
+			"ubus": {
+				"iwinfo": [ "info", "freqlist" ]
+			}
+		}
+	},
+
+	"luci-mod-status-firewall": {
+		"description": "Grant access to firewall status",
+		"read": {
+			"cgi-io": [ "exec" ],
+			"file": {
+				"/usr/sbin/nft --json list ruleset": [ "exec" ],
+				"/usr/sbin/iptables --line-numbers -w -nvxL -t *": [ "exec" ],
+				"/usr/sbin/ip6tables --line-numbers -w -nvxL -t *": [ "exec" ],
+				"/usr/sbin/ip6tables": [ "list" ]
+			},
+			"ubus": {
+				"file": [ "stat" ]
+			}
+		},
+		"write": {
+			"cgi-io": [ "exec" ],
+			"file": {
+				"/etc/init.d/firewall restart": [ "exec" ],
+				"/usr/sbin/iptables -Z": [ "exec" ],
+				"/usr/sbin/ip6tables -Z": [ "exec" ]
+			},
+			"ubus": {
+				"file": [ "exec" ]
+			}
+		}
+	}
+}

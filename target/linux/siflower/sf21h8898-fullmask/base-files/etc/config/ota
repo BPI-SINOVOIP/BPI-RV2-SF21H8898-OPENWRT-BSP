@@ -1,0 +1,9 @@
+config setting 'ota'
+        option romtype 0x4
+        option url "http://ota.siflower.com"
+        option post_result '0'
+        option need_ota '0'
+        option check_file '0'
+
+config setting 'auto_ota'
+        option enable 0

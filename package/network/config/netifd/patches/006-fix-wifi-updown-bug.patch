@@ -1,0 +1,13 @@
+Index: netifd-2022-02-20-136006b8/wireless.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/wireless.c
++++ netifd-2022-02-20-136006b8/wireless.c
+@@ -391,7 +391,7 @@ wireless_device_setup_cancel(struct wire
+ 	wireless_handler_stop(wdev);
+ 	D(WIRELESS, "Cancel wireless device '%s' setup\n", wdev->name);
+ 	wdev->cancel = true;
+-	uloop_timeout_set(&wdev->timeout, 10 * 1000);
++	uloop_timeout_set(&wdev->timeout, 15 * 1000);
+ }
+ 
+ static void

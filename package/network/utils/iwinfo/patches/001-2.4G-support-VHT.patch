@@ -1,0 +1,40 @@
+Index: libiwinfo-2022-08-19-0dad3e66/iwinfo_nl80211.c
+===================================================================
+--- libiwinfo-2022-08-19-0dad3e66.orig/iwinfo_nl80211.c
++++ libiwinfo-2022-08-19-0dad3e66/iwinfo_nl80211.c
+@@ -3053,13 +3053,14 @@ static int nl80211_eval_modelist(struct
+ 		m->hw |= IWINFO_80211_G;
+ 	}
+ 
+-	if (m->bands & IWINFO_BAND_5)
++	/* Treat any nonzero capability as 11ac */
++	if (m->nl_vht > 0)
+ 	{
+-		/* Treat any nonzero capability as 11ac */
+-		if (m->nl_vht > 0)
++		m->hw |= IWINFO_80211_AC;
++		m->ht |= IWINFO_HTMODE_VHT20 | IWINFO_HTMODE_VHT40;
++		if (m->bands & IWINFO_BAND_5)
+ 		{
+-			m->hw |= IWINFO_80211_AC;
+-			m->ht |= IWINFO_HTMODE_VHT20 | IWINFO_HTMODE_VHT40 | IWINFO_HTMODE_VHT80;
++			m->ht |= IWINFO_HTMODE_VHT80;
+ 
+ 			switch ((m->nl_vht >> 2) & 3)
+ 			{
+@@ -3071,10 +3072,11 @@ static int nl80211_eval_modelist(struct
+ 				m->ht |= IWINFO_HTMODE_VHT160;
+ 			}
+ 		}
+-		else
+-		{
+-			m->hw |= IWINFO_80211_A;
+-		}
++
++	}
++	else if (m->bands & IWINFO_BAND_5)
++	{
++		m->hw |= IWINFO_80211_A;
+ 	}
+ 
+ 	if (m->bands & IWINFO_BAND_60)

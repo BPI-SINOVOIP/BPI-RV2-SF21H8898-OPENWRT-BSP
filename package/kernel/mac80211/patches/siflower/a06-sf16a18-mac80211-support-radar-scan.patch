@@ -1,0 +1,20 @@
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8603,7 +8603,7 @@ static int nl80211_trigger_scan(struct s
+ 	}
+ 
+ 	request->n_channels = i;
+-
++/*
+ 	wdev_lock(wdev);
+ 	if (!cfg80211_off_channel_oper_allowed(wdev)) {
+ 		struct ieee80211_channel *chan;
+@@ -8622,7 +8622,7 @@ static int nl80211_trigger_scan(struct s
+ 		}
+ 	}
+ 	wdev_unlock(wdev);
+-
++*/
+ 	i = 0;
+ 	if (n_ssids) {
+ 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS], tmp) {

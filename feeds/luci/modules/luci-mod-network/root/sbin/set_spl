@@ -1,0 +1,36 @@
+#!/bin/sh
+# $1: mac
+# $2: dslval
+# $3: uslval
+# $4: vlan_id
+# $5: spl_index
+
+if [$2 == '']; then
+    dslval=`uci get devlist.$1.dslval`
+    if [$dslval == '']; then
+        dslval=0
+    fi
+else
+    dslval=$2
+fi
+
+if [$3 == '']; then
+    uslval=`uci get devlist.$1.uslval`
+    if [$uslval == '']; then
+        uslval=0
+    fi
+else
+    uslval=$3
+fi
+
+spl_scredit=$(( ($uslval * 1000) / 64 / 8 ))
+spl_dcredit=$(( ($dslval * 1000) / 64 / 8 ))
+
+uci set devlist.$1.dslval=$dslval
+uci set devlist.$1.uslval=$uslval
+
+mac=$(echo $1 | sed 's/_/:/g')
+
+ubus call npu.l2 spl '{"mac":"'"$mac"'","vlan_id":'$4',"spl_index":'$5',"spl_mode":true,"spl_scredit":'$spl_scredit',"spl_dcredit":'$spl_dcredit'}'
+
+uci commit devlist

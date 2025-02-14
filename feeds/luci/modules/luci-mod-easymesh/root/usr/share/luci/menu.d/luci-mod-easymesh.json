@@ -1,0 +1,31 @@
+{
+    "admin/network/easymesh": {
+		"title": "EasyMesh",
+		"order": 70,
+		"action": {
+			"type": "alias",
+			"path": "admin/network/easymesh/easymesh_basic"
+		},
+		"depends": {
+			"acl": [ "luci-mod-easymesh-easymesh" ]
+		}
+	},
+
+	"admin/network/easymesh/easymesh_basic": {
+		"title": "Easymesh Basic",
+		"order": 1,
+		"action": {
+			"type": "view",
+			"path": "easymesh/easymesh_basic"
+		}
+	},
+
+	"admin/network/easymesh/easymesh_topo": {
+		"title": "Easymesh Topo",
+		"order": 2,
+		"action": {
+			"type": "view",
+			"path": "easymesh/easymesh_topo"
+		}
+	}
+}

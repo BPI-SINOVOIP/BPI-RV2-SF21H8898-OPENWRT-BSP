@@ -1,0 +1,64 @@
+Index: hostapd-2022-01-16-cff80b4f/hostapd/config_file.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/hostapd/config_file.c
++++ hostapd-2022-01-16-cff80b4f/hostapd/config_file.c
+@@ -2533,6 +2533,8 @@ static int hostapd_config_fill(struct ho
+ 		os_memcpy(conf->country, pos, 2);
+ 	} else if (os_strcmp(buf, "country3") == 0) {
+ 		conf->country[2] = strtol(pos, NULL, 16);
++	} else if (os_strcmp(buf, "rd_disabled") == 0) {
++		conf->rd_disabled = atoi(pos);
+ 	} else if (os_strcmp(buf, "ieee80211d") == 0) {
+ 		conf->ieee80211d = atoi(pos);
+ 	} else if (os_strcmp(buf, "ieee80211h") == 0) {
+Index: hostapd-2022-01-16-cff80b4f/src/ap/ap_config.h
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/ap_config.h
++++ hostapd-2022-01-16-cff80b4f/src/ap/ap_config.h
+@@ -981,6 +981,7 @@ struct hostapd_config {
+ 
+ 	int ap_table_max_size;
+ 	int ap_table_expiration_time;
++	int rd_disabled; /*  whether radar_detection is disabled or not. */
+ 
+ 	unsigned int track_sta_max_num;
+ 	unsigned int track_sta_max_age;
+Index: hostapd-2022-01-16-cff80b4f/src/ap/hostapd.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/hostapd.c
++++ hostapd-2022-01-16-cff80b4f/src/ap/hostapd.c
+@@ -1697,14 +1697,18 @@ static int setup_interface(struct hostap
+ 		return -1;
+ 
+ 	if (hapd->iconf->country[0] && hapd->iconf->country[1]) {
+-		char country[4], previous_country[4];
++		char country[5], previous_country[4];
+ 
+ 		hostapd_set_state(iface, HAPD_IFACE_COUNTRY_UPDATE);
+ 		if (hostapd_get_country(hapd, previous_country) < 0)
+ 			previous_country[0] = '\0';
+ 
+ 		os_memcpy(country, hapd->iconf->country, 3);
+-		country[3] = '\0';
++	 if (hapd->iconf->rd_disabled)
++	     country[3] = 'T';
++	 else
++	     country[3] = 'F';
++	 country[4] = '\0';
+ 		if (hostapd_set_country(hapd, country) < 0) {
+ 			wpa_printf(MSG_ERROR, "Failed to set country code");
+ 			return -1;
+Index: hostapd-2022-01-16-cff80b4f/src/drivers/driver_nl80211.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/drivers/driver_nl80211.c
++++ hostapd-2022-01-16-cff80b4f/src/drivers/driver_nl80211.c
+@@ -1809,7 +1809,8 @@ static int wpa_driver_nl80211_set_countr
+ 	alpha2[2] = '\0';
+ 
+ 	if (!nl80211_cmd(drv, msg, 0, NL80211_CMD_REQ_SET_REG) ||
+-	    nla_put_string(msg, NL80211_ATTR_REG_ALPHA2, alpha2)) {
++	 nla_put_string(msg, NL80211_ATTR_REG_ALPHA2, alpha2) ||
++	     ((alpha2_arg[3] == 'T') && nla_put_u32(msg, NL80211_ATTR_DFS_CAC_TIME, 0))) {
+ 		nlmsg_free(msg);
+ 		return -EINVAL;
+ 	}

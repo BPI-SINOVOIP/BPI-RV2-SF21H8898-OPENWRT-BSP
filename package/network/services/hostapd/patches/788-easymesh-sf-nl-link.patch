@@ -1,0 +1,1020 @@
+--- a/hostapd/main.c
++++ b/hostapd/main.c
+@@ -394,6 +394,10 @@ static void hostapd_global_deinit(const
+ {
+ 	int i;
+ 
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++	wpa_driver_nl80211_siflower_deinit();
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
++
+ 	for (i = 0; wpa_drivers[i] && global.drv_priv; i++) {
+ 		if (!global.drv_priv[i])
+ 			continue;
+@@ -441,6 +445,10 @@ static int hostapd_global_run(struct hap
+ 	}
+ #endif /* EAP_SERVER_TNC */
+ 
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++	wpa_driver_nl80211_siflower_init(ifaces, SF_NL_INITOR_HAPD);
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
++
+ 	eloop_run();
+ 
+ 	return 0;
+@@ -668,6 +676,11 @@ int main(int argc, char *argv[])
+ 	interfaces.ctrl_iface_init = hostapd_ctrl_iface_init;
+ 	interfaces.ctrl_iface_deinit = hostapd_ctrl_iface_deinit;
+ 	interfaces.driver_init = hostapd_driver_init;
++
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++	interfaces.sf_nlmsg_process = sf_nl_receive_msg_process;
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
++
+ 	interfaces.global_iface_path = NULL;
+ 	interfaces.global_iface_name = NULL;
+ 	interfaces.global_ctrl_sock = -1;
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -6162,4 +6162,83 @@ extern const struct wpa_driver_ops wpa_d
+ extern const struct wpa_driver_ops wpa_driver_none_ops; /* driver_none.c */
+ #endif /* CONFIG_DRIVER_NONE */
+ 
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++#define SF_EASYMESH_USER 31
++#define SF_USER_MSG (0x10 + 8)
++// maximum payload size
++#define SF_MAX_PAYLOAD 512
++
++/**
++ * sf_nl_msg_type - Enumerates different types of Netlink messages.
++ *
++ * Defines various types of messages that can be sent/received through the Netlink interface.
++ */
++typedef enum {
++    /**
++     * SF_NL_MSG_OPEN - Used to construct netlink connection.
++     * SF_NL_MSG_CLOSE - Used to unconstruct netlink connection.
++     */
++    SF_NL_MSG_OPEN = 0,
++    SF_NL_MSG_CLOSE,
++
++    /*========================================= hostapd =======================================*/
++    /**
++     * SF_NL_MSG_UPDATE - Message type for updating hostapd configuration.
++     * SF_NL_MSG_SEND_BCN_REQ - Message type for instructing hostapd to send a Beacon Request.
++     * SF_NL_MSG_SEND_BTM_REQ - Message type for instructing hostapd to send a BSS Transition Management Request.
++     */
++    SF_NL_MSG_UPDATE,
++    SF_NL_MSG_SEND_BCN_REQ,
++    SF_NL_MSG_SEND_BTM_REQ,
++
++    /*========================================= wpa_supplicant =================================*/
++    /**
++     * SF_NL_MSG_BACKHAUL_OPT - Message type for steering backhaul optimization.
++     * SF_NL_MSG_BTM_STATUS - Message type for sending BSS Transition Management Status Code to kernel.
++     */
++    SF_NL_MSG_BACKHAUL_OPT,
++    SF_NL_MSG_BTM_STATUS,
++} sf_nl_msg_type;
++
++/**
++ * struct sf_nl_msg - A structure of nltlink messages.
++ * @type: Siflower netlink message type.
++ * @bssid: bssid of interface want to operate.
++ * @data: The data.
++ * @data_len: The length of data.
++ *
++ * This structure is used to store messages.
++ */
++typedef struct {
++    sf_nl_msg_type type;
++    uint8_t bssid[ETH_ALEN];
++    int data_len;
++    u8 *data;
++} sf_nl_msg;
++
++/**
++ * sf_nl_cominitiator - Define different netlink communication initiator types.
++ */
++typedef enum {
++    SF_NL_INITOR_HAPD = 0,
++    SF_NL_INITOR_WPA,
++} sf_nl_cominitiator;
++
++/**
++ * sf_listen_args - A structure of arguments pass to .
++ * @data: A pointer point to Global information of hostapd or wpa_supplicant.
++ * @cominitiator: The type of netlink communication initiator.
++ *
++ * This structure used to pass arguments to new pthread.
++ */
++typedef struct {
++    void *data;
++    sf_nl_cominitiator cominitiator;
++} sf_listen_args;
++
++void sf_update_btm_status(enum bss_trans_mgmt_status_code status);
++int wpa_driver_nl80211_siflower_init(void *data, sf_nl_cominitiator cominitiator);
++int wpa_driver_nl80211_siflower_deinit(void);
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
++
+ #endif /* DRIVER_H */
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -36,6 +36,12 @@
+ #include "rfkill.h"
+ #include "driver_nl80211.h"
+ 
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++#include <syslog.h>
++#include <pthread.h>
++#include "ap/hostapd.h"
++#include "wpa_supplicant_i.h"
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
+ 
+ #ifndef NETLINK_CAP_ACK
+ #define NETLINK_CAP_ACK 10
+@@ -12285,3 +12291,550 @@ const struct wpa_driver_ops wpa_driver_n
+ 	.register_frame = testing_nl80211_register_frame,
+ #endif /* CONFIG_TESTING_OPTIONS */
+ };
++
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++/* Number of attempts to establish Netlink connection.*/
++#define CONNECT_RETRY_LIMIT 20
++volatile bool keep_running = true;
++int sf_netlink_socket;
++sf_listen_args args;
++pthread_t netlink_thread;
++enum bss_trans_mgmt_status_code sf_btm_status;
++
++/**
++ * sf_update_btm_status - Update the global BTM status code.
++ *
++ * @param status: The status code value.
++ *
++ * This function is used to update the global BTM status code as a response
++ * to the BTM Request initiated by the agent.
++ */
++void sf_update_btm_status(enum bss_trans_mgmt_status_code status)
++{
++    syslog(LOG_INFO, "[EasyMesh] Set BTM status code to %02x.", status);
++
++    /* Update the global BTM status. */
++    sf_btm_status = status;
++}
++
++/**
++ * sf_nl_send_msg - Send a Netlink message to the kernel.
++ *
++ * @param sock_fd: The descriptor of the socket.
++ * @param nl_msg: Pointer to the structure of the Netlink message to be sent.
++ *
++ * This function constructs a Netlink message from the provided message structure and sends it to the kernel via the
++ * specified socket descriptor.
++ *
++ * Return 0 on success; -1 on failure.
++ */
++static int sf_nl_send_msg(int sock_fd, sf_nl_msg *nl_msg)
++{
++    struct sockaddr_nl dest_addr;
++    struct nlmsghdr *nlh = NULL;
++    int total_size = sizeof(sf_nl_msg_type) + sizeof(int) + nl_msg->data_len;
++
++    /* Allocate memory for the Netlink message header. */
++    nlh = (struct nlmsghdr *)malloc(NLMSG_SPACE(total_size));
++    if (!nlh) {
++        syslog(LOG_ERR, "[EasyMesh] Memory allocation for Netlink header failed.");
++        return -1;
++    }
++
++    /* Initialize the Netlink message header. */
++    memset(nlh, 0, NLMSG_SPACE(total_size));
++    nlh->nlmsg_len = NLMSG_SPACE(total_size);
++    nlh->nlmsg_pid = getpid();
++    nlh->nlmsg_flags = NLM_F_REQUEST;
++    nlh->nlmsg_type = SF_USER_MSG;
++
++    /* Copy message data into the Netlink message payload. */
++    memcpy(NLMSG_DATA(nlh), &nl_msg->type, sizeof(sf_nl_msg_type));
++    memcpy(NLMSG_DATA(nlh) + sizeof(sf_nl_msg_type), &nl_msg->data_len, sizeof(int));
++    memcpy(NLMSG_DATA(nlh) + sizeof(sf_nl_msg_type) + sizeof(int), nl_msg->data, nl_msg->data_len);
++
++    /* Prepare destination address structure for the kernel. */
++    memset(&dest_addr, 0, sizeof(dest_addr));
++    dest_addr.nl_family = AF_NETLINK;
++
++    /* Send the message to the kernel. */
++    if (sendto(sock_fd, nlh, nlh->nlmsg_len, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr)) < 0) {
++        syslog(LOG_ERR, "[EasyMesh] Netlink message send failed: %s", strerror(errno));
++        free(nlh);
++        return -1;
++    }
++
++    /* Free allocated memory for the Netlink header. */
++    free(nlh);
++
++    return 0;
++}
++
++/**
++ * sf_process_control_interface_command - Process control interface commands received from the kernel.
++ *
++ * @param data: The data contained in the netlink message.
++ * @param bssid: The BSSID of the interface that the message is sent to.
++ * @param data_len: The length of the data.
++ * @param type: The type of message.
++ * @param args: The arguments of the netlink communication initiator, containing global information of hostapd.
++ *
++ * This function processes different types of control interface commands from the kernel and routes them to the
++ * appropriate hostapd interface based on the provided BSSID.
++ */
++static void sf_process_control_interface_command(u8 *data, u8 *bssid, int data_len, sf_nl_msg_type type,
++                                                 sf_listen_args *args)
++{
++    struct hapd_interfaces *ifaces = (struct hapd_interfaces *)args->data;
++    struct hostapd_iface *iface = NULL;
++    struct hostapd_data *bss = NULL;
++    char *cur_msg_str = NULL;
++    u8 *process_data = NULL;
++    int i, j;
++
++    /* Control interface message prefixes. */
++    char *sf_ctrl_iface_strs[] = {
++        "UPDATE ",
++        "REQ_BEACON ",
++        "BSS_TM_REQ ",
++    };
++
++    cur_msg_str = sf_ctrl_iface_strs[type - 2];
++    process_data = malloc(data_len + strlen(cur_msg_str) + 1); // +1 for null terminator
++    if (!process_data) {
++        syslog(LOG_ERR, "[EasyMesh] Failed to allocate memory for process_data\n");
++        return;
++    }
++
++    /* Build the complete message. */
++    memset(process_data, 0, data_len + strlen(cur_msg_str) + 1);
++    memcpy(process_data, cur_msg_str, strlen(cur_msg_str));
++    if (data_len && data) {
++        memcpy(process_data + strlen(cur_msg_str), data, data_len);
++        process_data[data_len + strlen(cur_msg_str)] = '\0';
++    } else {
++        process_data[strlen(cur_msg_str)] = '\0';
++    }
++
++    /* Search for the interface that matches the provided BSSID. */
++    for (i = 0; i < ifaces->count; i++) {
++        iface = ifaces->iface[i];
++        for (j = 0; j < iface->num_bss; j++) {
++            bss = iface->bss[j];
++            if (memcmp(bssid, bss->own_addr, ETH_ALEN) == 0) {
++                goto process; // BSSID found, jump to process section
++            }
++        }
++    }
++
++    /* If no matching BSSID is found, log an error and return. */
++    syslog(LOG_ERR, "[EasyMesh] Invalid BSSID: %02x:%02x:%02x:%02x:%02x:%02x\n", bssid[0], bssid[1], bssid[2], bssid[3],
++           bssid[4], bssid[5]);
++    free(process_data);
++    return;
++
++process:
++    if (!ifaces->sf_nlmsg_process) {
++        syslog(LOG_ERR, "[EasyMesh] sf_nl_msg_process is NULL.\n");
++        free(process_data);
++        return;
++    }
++
++    /* Pass the data to hostapd for processing. */
++    ifaces->sf_nlmsg_process(process_data, bss);
++
++    free(process_data);
++}
++
++/**
++ * sf_handle_nl_backhaul_opt_msg - Handle the message of type SF_NL_MSG_BACKHAUL_OPT.
++ *
++ * @param args: The arguments of the netlink communication initiator, containing the global information of wpa_supplicant.
++ * @param bssid: The BSSID of interface that message send to.
++ * @param data: The data in the netlink message.
++ * @param data_len: The length of the data.
++ *
++ * This function processes the message of type SF_NL_MSG_BACKHAUL_OPT, updates the BTM status, and sends a response back
++ * to the kernel.
++ */
++static void sf_handle_nl_backhaul_opt_msg(sf_listen_args *args, u8 *bssid, u8 *data, int data_len)
++{
++    struct wpa_global *global = (struct wpa_global *)args->data;
++    struct wpa_supplicant *wpa_s = NULL;
++    u8 backhaul_steer_resp_reason;
++    u8 *end = data + data_len;
++    sf_nl_msg msg;
++
++    /* Find the wpa_supplicant instance corresponding to the given BSSID. */
++    for (wpa_s = global->ifaces; wpa_s; wpa_s = wpa_s->next) {
++        if (memcmp(wpa_s->own_addr, bssid, ETH_ALEN) == 0) {
++            break; // Match found
++        }
++    }
++
++    if (!wpa_s) {
++        syslog(LOG_ERR, "[EasyMesh] Invalid backhaul station MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", bssid[0], bssid[1],
++               bssid[2], bssid[3], bssid[4], bssid[5]);
++        return;
++    }
++
++    /* Forward declaration for handling BSS transition management request. */
++    extern void ieee802_11_rx_bss_trans_mgmt_req(struct wpa_supplicant * wpa_s, const u8 *pos, const u8 *end,
++                                                 int reply);
++
++    /* Initialize BTM status. */
++    sf_update_btm_status(WNM_BSS_TM_REJECT_UNSPECIFIED);
++
++    /* Steer backhaul station to associate with target BSS. */
++    ieee802_11_rx_bss_trans_mgmt_req(wpa_s, data, end, 1);
++
++    /* Convert BTM status to reason code in backhaul steering response. */
++    switch (sf_btm_status) {
++        case WNM_BSS_TM_ACCEPT:
++            backhaul_steer_resp_reason = 0x00;
++            break;
++        case WNM_BSS_TM_REJECT_NO_SUITABLE_CANDIDATES:
++            backhaul_steer_resp_reason = 0x05;
++            break;
++        default:
++            backhaul_steer_resp_reason = 0x06;
++            break;
++    }
++
++    /* Send back reason code in backhaul steering response to kernel. */
++    msg.type = SF_NL_MSG_BTM_STATUS;
++    msg.data_len = sizeof(backhaul_steer_resp_reason);
++    msg.data = malloc(msg.data_len);
++
++    if (!msg.data) {
++        syslog(LOG_ERR, "[EasyMesh] Netlink message data malloc failed\n");
++        return; // Memory allocation failed
++    }
++
++    /* Copy the reason code to the message data. */
++    memcpy(msg.data, &backhaul_steer_resp_reason, sizeof(backhaul_steer_resp_reason));
++
++    /* Send the BTM status code to the kernel. */
++    if (sf_nl_send_msg(sf_netlink_socket, &msg)) {
++        syslog(LOG_ERR, "[EasyMesh] Send BTM status code to kernel failed\n");
++        free(msg.data); // Free allocated memory on error
++        return;
++    }
++
++    free(msg.data);
++}
++
++/**
++ * sf_process_hapd_message - Process messages received from the kernel to hostapd.
++ *
++ * @param data: The data contained in the netlink message.
++ * @param bssid: The BSSID of the interface that the message is sent to.
++ * @param data_len: The length of the data.
++ * @param type: The type of message.
++ * @param args: The arguments of the netlink communication initiator, containing global information of hostapd.
++ *
++ * This function processes different types of messages from the kernel and routes them to the appropriate hostapd
++ * interface based on the provided BSSID.
++ */
++static void sf_process_hapd_message(u8 *data, u8 *bssid, int data_len, sf_nl_msg_type type, sf_listen_args *args)
++{
++    /* Process message based on the message type. */
++    switch (type) {
++        case SF_NL_MSG_CLOSE:
++            /* Signal to stop the listener. */
++            keep_running = false;
++            syslog(LOG_INFO, "[EasyMesh] Received close message. Stopping hostapd listener.");
++            break;
++        case SF_NL_MSG_UPDATE:
++        case SF_NL_MSG_SEND_BCN_REQ:
++        case SF_NL_MSG_SEND_BTM_REQ:
++            sf_process_control_interface_command(data, bssid, data_len, type, args);
++            break;
++        default:
++            syslog(LOG_ERR, "[EasyMesh] Received unsupported hostapd message type: %d\n", type);
++            break;
++    }
++}
++
++/**
++ * sf_process_wpa_message - Process the message receive from kernel to wpa_supplicant.
++ *
++ * @param data: The data in netlink message.
++ * @param bssid: The BSSID of interface that message send to.
++ * @param data_len: The length of data.
++ * @param type: The type of message.
++ * @param args: The arguments of netlink communication initiator, containing the global information of wpa_supplicant.
++ *
++ * This function processes different types of messages received from the kernel and performs actions based on the
++ * message type.
++ */
++static void sf_process_wpa_message(u8 *data, u8 *bssid, int data_len, sf_nl_msg_type type, sf_listen_args *args)
++{
++    /* Process message based on the msg type. */
++    switch (type) {
++        case SF_NL_MSG_CLOSE:
++            /* Signal to stop the listener. */
++            keep_running = false;
++            syslog(LOG_INFO, "[EasyMesh] Received close message. Stopping wpa_supplicant listener.");
++            break;
++        case SF_NL_MSG_BACKHAUL_OPT:
++            /* Handle backhaul optimization message. */
++            sf_handle_nl_backhaul_opt_msg(args, bssid, data, data_len);
++            break;
++        default:
++            syslog(LOG_ERR, "[EasyMesh] Received unsupported wpa_supplicant message type: %d", type);
++            break;
++    }
++}
++
++/**
++ * sf_nl_receive_msg - Receive a message sent from the kernel.
++ *
++ * @param sock_fd: The descriptor of the socket.
++ * @param args: The arguments of the Netlink communication initiator.
++ * @param nlh: Pointer to the Netlink message header.
++ *
++ * This function receives a message from the specified socket, processes it, and calls the appropriate handler based on
++ * the communication initiator type.
++ */
++static void sf_nl_receive_msg(int sock_fd, sf_listen_args *args, struct nlmsghdr *nlh)
++{
++    u8 *data = NULL;
++    int data_len = 0;
++    sf_nl_msg_type type = -1;
++    u8 bssid[6];
++    struct iovec iov;
++    struct msghdr msg;
++
++    /* Validate input arguments. */
++    if (!args || !args->data) {
++        syslog(LOG_ERR, "[EasyMesh] Invalid arguments: hapd_interfaces or wpa_global is NULL\n");
++        return;
++    }
++
++    /* Prepare for receiving message. */
++    iov.iov_base = (void *)nlh;
++    iov.iov_len = NLMSG_SPACE(SF_MAX_PAYLOAD);
++    msg.msg_iov = &iov;
++    msg.msg_iovlen = 1;
++
++    /* Receive message from the socket. */
++    if (recvmsg(sock_fd, &msg, 0) < 0) {
++        syslog(LOG_ERR, "[EasyMesh] Failed to receive message from socket: %s", strerror(errno));
++        return;
++    }
++
++    /* Check if the message type is valid. */
++    if (nlh->nlmsg_type != SF_USER_MSG) {
++        syslog(LOG_WARNING, "[EasyMesh] Received an unexpected message type: %d. Ignoring.", nlh->nlmsg_type);
++        return;
++    }
++
++    /* Parse the data from netlink message */
++    type = *((sf_nl_msg_type *)NLMSG_DATA(nlh));
++    memcpy(bssid, (u8 *)(NLMSG_DATA(nlh) + sizeof(sf_nl_msg_type)), ETH_ALEN);
++    data_len = *((int *)(NLMSG_DATA(nlh) + sizeof(sf_nl_msg_type) + ETH_ALEN));
++
++    /* Allocate memory for data if length is not zero. */
++    if (data_len > 0) {
++        data = (u8 *)malloc(data_len + 1);
++        if (!data) {
++            syslog(LOG_ERR, "[EasyMesh] Memory allocation failed for frame data of length %d", data_len);
++            return;
++        }
++        memcpy(data, NLMSG_DATA(nlh) + sizeof(sf_nl_msg_type) + ETH_ALEN + sizeof(int), data_len);
++        data[data_len] = '\0';
++    }
++
++    /* Log received message details with clearer formatting. */
++    syslog(
++        LOG_INFO,
++        "[EasyMesh] Received Netlink Message: Type: [%d], BSSID: [%02x:%02x:%02x:%02x:%02x:%02x], Length: [%d], Data: [%s].",
++        type, bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5], data_len, data ? (char *)data : "NULL");
++
++    /* Process message based on the communication initiator. */
++    switch (args->cominitiator) {
++        case SF_NL_INITOR_HAPD:
++            /* Process message send to hostapd. */
++            syslog(LOG_INFO, "[EasyMesh] Processing message for hostapd.");
++            sf_process_hapd_message(data, bssid, data_len, type, args);
++            break;
++        case SF_NL_INITOR_WPA:
++            syslog(LOG_INFO, "[EasyMesh] Processing message for wpa_supplicant.");
++            /* Process message send to wpa_supplicant. */
++            sf_process_wpa_message(data, bssid, data_len, type, args);
++            break;
++        default:
++            syslog(LOG_ERR, "[EasyMesh]Unknown communication initiator: %d", args->cominitiator);
++            break;
++    }
++
++    /* Free allocated resources. */
++    free(data);
++}
++
++/**
++ * sf_nl_open_netlink - Initialize Netlink connection.
++ *
++ * @param sock_fd: Pointer to the socket descriptor that will be initialized.
++ * @param cominitiator: The type of Netlink communication initiator.
++ *
++ * This function creates a Netlink socket and binds it to the local process. It then sends a message indicating the type
++ * of communication initiator.
++ *
++ * Return 0 on success; -1 on failure.
++ */
++static int sf_nl_open_netlink(int *sock_fd, sf_nl_cominitiator cominitiator)
++{
++    struct sockaddr_nl src_addr;
++    sf_nl_msg nl_msg;
++    uint8_t data[8];
++    int fd;
++
++    /* Create a Netlink socket. */
++    fd = socket(PF_NETLINK, SOCK_RAW, SF_EASYMESH_USER);
++    if (fd < 0) {
++        return -1;
++    }
++
++    /* Initialize the source address structure. */
++    memset(&src_addr, 0, sizeof(src_addr));
++    src_addr.nl_family = AF_NETLINK;
++    src_addr.nl_pid = getpid();
++
++    /* Bind the socket to the address. */
++    if (bind(fd, (struct sockaddr *)&src_addr, sizeof(src_addr)) < 0) {
++        syslog(LOG_ERR, "[EasyMesh] Socket binding failed: %s.", strerror(errno));
++        close(fd);
++        return -1;
++    }
++
++    /* Prepare the Netlink message. */
++    nl_msg.type = SF_NL_MSG_OPEN; // Set message type
++    nl_msg.data_len = 1;          // Set data length
++    data[0] = cominitiator;       // Set initiator type
++    nl_msg.data = data;           // Assign data to message
++
++    /* Send the Netlink message. */
++    if (sf_nl_send_msg(fd, &nl_msg) < 0) {
++        syslog(LOG_ERR, "[EasyMesh] Failed to send Netlink message.");
++        close(fd);
++        return -1;
++    }
++
++    /* Return the socket descriptor. */
++    *sock_fd = fd;
++
++    return 0;
++}
++
++/**
++ * sf_nl_listen - Listens for EasyMesh module insert events
++ *
++ * @param arg: Arguments for the Netlink communication initiator
++ *
++ * This function initializes a Netlink socket and listens for messages from the EasyMesh module. It attempts to
++ * establish a connection up to CONNECT_RETRY_LIMIT  times. If connection fails, the listening loop will not execute.
++ * The function continues receiving messages while `keep_running` is true.
++ *
++ * Return NULL upon error or successful thread exit.
++ */
++static void *sf_nl_listen(void *arg)
++{
++    sf_listen_args *args = (sf_listen_args *)arg;
++    struct nlmsghdr *nlh = NULL;
++    int i;
++
++    syslog(LOG_INFO, "[EasyMesh] Starting Netlink connection attempts for EasyMesh module.");
++
++    /* Attempt to establish a Netlink connection up to CONNECT_RETRY_LIMIT retries. */
++    for (i = 0; i < CONNECT_RETRY_LIMIT; i++) {
++        if (sf_nl_open_netlink(&sf_netlink_socket, args->cominitiator) == 0) {
++            syslog(LOG_INFO, "[EasyMesh] Netlink connection established on attempt %d.", i + 1);
++            break;
++        }
++        sleep(1);
++    }
++
++    /* Check if all connection attempts failed. */
++    if (i == CONNECT_RETRY_LIMIT) {
++        syslog(LOG_ERR, "[EasyMesh] All Netlink connection attempts failed. Exiting listener.");
++        keep_running = false;
++        return NULL;
++    }
++
++    /* Allocate memory for the Netlink message header. */
++    nlh = (struct nlmsghdr *)malloc(NLMSG_SPACE(SF_MAX_PAYLOAD));
++    if (!nlh) {
++        syslog(LOG_ERR, "[EasyMesh] Memory allocation for Netlink message header failed.");
++        return NULL;
++    }
++
++    /* Listen for messages while the service is running. */
++    syslog(LOG_INFO, "[EasyMesh] Starting to monitor messages.");
++    while (keep_running) {
++        memset(nlh, 0, NLMSG_SPACE(SF_MAX_PAYLOAD));
++        sf_nl_receive_msg(sf_netlink_socket, args, nlh);
++    }
++
++    /* Close Netlink socket and free allocated memory. */
++    close(sf_netlink_socket);
++    free(nlh);
++
++    syslog(LOG_INFO, "[EasyMesh] Netlink socket closed and memory freed. Listener exiting.");
++
++    return NULL;
++}
++
++/**
++ * wpa_driver_nl80211_siflower_init - Initialize Netlink communication.
++ *
++ * @param data: Global information of the Netlink communication initiator.
++ * @param cominitiator: Type of Netlink communication initiator.
++ *
++ * This function starts EasyMesh Netlink communication check.
++ * If the communication initiator type is invalid or if thread creation fails, it logs an error and returns -1.
++ *
++ * Return 0 on success; -1 on failure.
++ */
++int wpa_driver_nl80211_siflower_init(void *data, sf_nl_cominitiator cominitiator)
++{
++    args.data = data;
++    args.cominitiator = cominitiator;
++    sf_btm_status = WNM_BSS_TM_REJECT_UNSPECIFIED;
++
++    syslog(LOG_INFO, "[EasyMesh] Starting Netlink communication check. [%s]\n", __func__);
++
++    /* Validate initiator type. */
++    if (args.cominitiator != SF_NL_INITOR_HAPD && args.cominitiator != SF_NL_INITOR_WPA) {
++        syslog(LOG_ERR, "[EasyMesh] Invalid communication initiator: %d\n", args.cominitiator);
++        return -1;
++    }
++
++    /* Create Netlink listening thread. */
++    if (pthread_create(&netlink_thread, NULL, sf_nl_listen, &args) != 0) {
++        syslog(LOG_ERR, "[EasyMesh] Failed to create Netlink thread: %s", strerror(errno));
++        return -1;
++    }
++
++    return 0;
++}
++
++/**
++ * wpa_driver_nl80211_siflower_deinit - Deinitialize Netlink communication.
++ *
++ * Stops the EasyMesh Netlink communication and waits for the listening thread to exit.
++ *
++ * Rreturn 0 on success.
++ */
++int wpa_driver_nl80211_siflower_deinit(void)
++{
++    syslog(LOG_INFO, "[EasyMesh] Deinitializing Netlink communication. [%s]\n", __func__);
++
++    keep_running = false;
++    pthread_join(netlink_thread, NULL);
++
++    return 0;
++}
++
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
+\ No newline at end of file
+--- a/src/ap/hostapd.h
++++ b/src/ap/hostapd.h
+@@ -82,6 +82,10 @@ struct hapd_interfaces {
+        unsigned char ctrl_iface_cookie[CTRL_IFACE_COOKIE_LEN];
+ #endif /* CONFIG_CTRL_IFACE_UDP */
+ 	struct ubus_object ubus;
++
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++	void (*sf_nlmsg_process)(u8 *data, struct hostapd_data *hapd);
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
+ };
+ 
+ enum hostapd_chan_status {
+--- a/hostapd/ctrl_iface.c
++++ b/hostapd/ctrl_iface.c
+@@ -69,6 +69,9 @@
+ #include "ctrl_iface.h"
+ #include "config_file.h"
+ 
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++#include <syslog.h>
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
+ 
+ #define HOSTAPD_CLI_DUP_VALUE_MAX_LEN 256
+ 
+@@ -906,6 +909,20 @@ static int hostapd_ctrl_iface_bss_tm_req
+ 	u8 mbo[10];
+ 	size_t mbo_len = 0;
+ 
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++    u8 only_fill_tran_reason = 0;
++
++    /*
++     * Introduced the variable "only_fill_tran_reason" to control MBO attribute filling.
++     * When the cmd string contains the "only_fill_tran_reason" field, only the Transition Reason Code
++     * attribute of the MBO-OCE IE will be filled; in all other cases, the default behavior remains unchanged.
++     */
++    pos = os_strstr(cmd, "only_fill_tran_reason");
++    if (pos) {
++        only_fill_tran_reason = 1;
++    }
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
++
+ 	if (hwaddr_aton(cmd, addr)) {
+ 		wpa_printf(MSG_DEBUG, "Invalid STA MAC address");
+ 		return -1;
+@@ -993,56 +1010,83 @@ static int hostapd_ctrl_iface_bss_tm_req
+ 		unsigned int mbo_reason, cell_pref, reassoc_delay;
+ 		u8 *mbo_pos = mbo;
+ 
+-		ret = sscanf(pos, "mbo=%u:%u:%u", &mbo_reason,
+-			     &reassoc_delay, &cell_pref);
+-		if (ret != 3) {
+-			wpa_printf(MSG_DEBUG,
+-				   "MBO requires three arguments: mbo=<reason>:<reassoc_delay>:<cell_pref>");
+-			ret = -1;
+-			goto fail;
+-		}
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++        if (only_fill_tran_reason == 1) {
++            ret = sscanf(pos, "mbo=%u", &mbo_reason);
++            if (ret != 1) {
++                syslog(LOG_DEBUG, "[EasyMesh] Parse MBO transition reason code failed.\n");
++                ret = -1;
++                goto fail;
++            }
++
++            if (mbo_reason > MBO_TRANSITION_REASON_PREMIUM_AP) {
++                syslog(LOG_DEBUG, "[EasyMesh] Invalid MBO transition reason code %u.", mbo_reason);
++                ret = -1;
++                goto fail;
++            }
++
++            *mbo_pos++ = MBO_ATTR_ID_TRANSITION_REASON;
++            *mbo_pos++ = 1;
++            *mbo_pos++ = mbo_reason;
++            mbo_len = mbo_pos - mbo;
++        } else {
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
++
++			ret = sscanf(pos, "mbo=%u:%u:%u", &mbo_reason,
++					&reassoc_delay, &cell_pref);
++			if (ret != 3) {
++				wpa_printf(MSG_DEBUG,
++					"MBO requires three arguments: mbo=<reason>:<reassoc_delay>:<cell_pref>");
++				ret = -1;
++				goto fail;
++			}
+ 
+-		if (mbo_reason > MBO_TRANSITION_REASON_PREMIUM_AP) {
+-			wpa_printf(MSG_DEBUG,
+-				   "Invalid MBO transition reason code %u",
+-				   mbo_reason);
+-			ret = -1;
+-			goto fail;
+-		}
++			if (mbo_reason > MBO_TRANSITION_REASON_PREMIUM_AP) {
++				wpa_printf(MSG_DEBUG,
++					"Invalid MBO transition reason code %u",
++					mbo_reason);
++				ret = -1;
++				goto fail;
++			}
+ 
+-		/* Valid values for Cellular preference are: 0, 1, 255 */
+-		if (cell_pref != 0 && cell_pref != 1 && cell_pref != 255) {
+-			wpa_printf(MSG_DEBUG,
+-				   "Invalid MBO cellular capability %u",
+-				   cell_pref);
+-			ret = -1;
+-			goto fail;
+-		}
++			/* Valid values for Cellular preference are: 0, 1, 255 */
++			if (cell_pref != 0 && cell_pref != 1 && cell_pref != 255) {
++				wpa_printf(MSG_DEBUG,
++					"Invalid MBO cellular capability %u",
++					cell_pref);
++				ret = -1;
++				goto fail;
++			}
+ 
+-		if (reassoc_delay > 65535 ||
+-		    (reassoc_delay &&
+-		     !(req_mode & WNM_BSS_TM_REQ_DISASSOC_IMMINENT))) {
+-			wpa_printf(MSG_DEBUG,
+-				   "MBO: Assoc retry delay is only valid in disassoc imminent mode");
+-			ret = -1;
+-			goto fail;
+-		}
++			if (reassoc_delay > 65535 ||
++				(reassoc_delay &&
++				!(req_mode & WNM_BSS_TM_REQ_DISASSOC_IMMINENT))) {
++				wpa_printf(MSG_DEBUG,
++					"MBO: Assoc retry delay is only valid in disassoc imminent mode");
++				ret = -1;
++				goto fail;
++			}
+ 
+-		*mbo_pos++ = MBO_ATTR_ID_TRANSITION_REASON;
+-		*mbo_pos++ = 1;
+-		*mbo_pos++ = mbo_reason;
+-		*mbo_pos++ = MBO_ATTR_ID_CELL_DATA_PREF;
+-		*mbo_pos++ = 1;
+-		*mbo_pos++ = cell_pref;
+-
+-		if (reassoc_delay) {
+-			*mbo_pos++ = MBO_ATTR_ID_ASSOC_RETRY_DELAY;
+-			*mbo_pos++ = 2;
+-			WPA_PUT_LE16(mbo_pos, reassoc_delay);
+-			mbo_pos += 2;
+-		}
++			*mbo_pos++ = MBO_ATTR_ID_TRANSITION_REASON;
++			*mbo_pos++ = 1;
++			*mbo_pos++ = mbo_reason;
++			*mbo_pos++ = MBO_ATTR_ID_CELL_DATA_PREF;
++			*mbo_pos++ = 1;
++			*mbo_pos++ = cell_pref;
++
++			if (reassoc_delay) {
++				*mbo_pos++ = MBO_ATTR_ID_ASSOC_RETRY_DELAY;
++				*mbo_pos++ = 2;
++				WPA_PUT_LE16(mbo_pos, reassoc_delay);
++				mbo_pos += 2;
++			}
++
++			mbo_len = mbo_pos - mbo;
++
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++        }
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
+ 
+-		mbo_len = mbo_pos - mbo;
+ 	}
+ #endif /* CONFIG_MBO */
+ 
+@@ -5383,3 +5427,23 @@ static void hostapd_ctrl_iface_send(stru
+ }
+ 
+ #endif /* CONFIG_NATIVE_WINDOWS */
++
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++/**
++ * sf_nl_receive_msg_process - Wrapper function for hostapd_ctrl_iface_receive_process.
++ *
++ * @param data: Pointer to the received data buffer.
++ * @param hapd: Pointer to the hostapd_data structure.
++ *
++ * Calls hostapd_ctrl_iface_receive_process to handle the received message.
++ */
++void sf_nl_receive_msg_process(u8 *data, struct hostapd_data *hapd)
++{
++    char reply[32];
++
++    syslog(LOG_INFO, "[EasyMesh] Received command: [%s].", data);
++
++    /* Handle the received message. */
++    hostapd_ctrl_iface_receive_process(hapd, (char *)data, reply, sizeof(reply), NULL, 0);
++}
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
+--- a/hostapd/ctrl_iface.h
++++ b/hostapd/ctrl_iface.h
+@@ -36,4 +36,8 @@ hostapd_global_ctrl_iface_deinit(struct
+ }
+ #endif /* CONFIG_NO_CTRL_IFACE */
+ 
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++void sf_nl_receive_msg_process(u8 *data, struct hostapd_data *hapd);
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
++
+ #endif /* CTRL_IFACE_H */
+--- a/hostapd/Makefile
++++ b/hostapd/Makefile
+@@ -227,6 +227,10 @@ ifdef CONFIG_DRIVER_SIFLOWER
+ CFLAGS += -DCONFIG_DRIVER_SIFLOWER
+ endif
+ 
++ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++CFLAGS += -DCONFIG_DRIVER_NL80211_SIFLOWER
++endif
++
+ ifdef CONFIG_NO_CTRL_IFACE
+ CFLAGS += -DCONFIG_NO_CTRL_IFACE
+ else
+--- a/wpa_supplicant/wpa_supplicant.c
++++ b/wpa_supplicant/wpa_supplicant.c
+@@ -7564,6 +7564,10 @@ int wpa_supplicant_run(struct wpa_global
+ 		return -1;
+ #endif
+ 
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++	wpa_driver_nl80211_siflower_init(global, SF_NL_INITOR_WPA);
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
++
+ 	if (global->params.wait_for_monitor) {
+ 		for (wpa_s = global->ifaces; wpa_s; wpa_s = wpa_s->next)
+ 			if (wpa_s->ctrl_iface && !wpa_s->p2p_mgmt)
+@@ -7604,6 +7608,10 @@ void wpa_supplicant_deinit(struct wpa_gl
+ 	wifi_display_deinit(global);
+ #endif /* CONFIG_WIFI_DISPLAY */
+ 
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++	wpa_driver_nl80211_siflower_deinit();
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
++
+ 	while (global->ifaces)
+ 		wpa_supplicant_remove_iface(global, global->ifaces, 1);
+ 
+--- a/src/ap/hostapd.c
++++ b/src/ap/hostapd.c
+@@ -341,7 +341,14 @@ int hostapd_reload_config(struct hostapd
+ 	} else {
+ 		for (j = 0; j < iface->num_bss; j++) {
+ 			hapd = iface->bss[j];
++
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++			if (!hapd->config_id || !newconf->bss[j]->config_id ||
++				strcmp(hapd->config_id, newconf->bss[j]->config_id)) {
++#else
+ 			if (!hapd->config_id || strcmp(hapd->config_id, newconf->bss[j]->config_id)) {
++#endif
++
+ 				hostapd_flush_old_stations(iface->bss[j],
+ 							   WLAN_REASON_PREV_AUTH_NOT_VALID);
+ #ifdef CONFIG_WEP
+--- a/wpa_supplicant/wnm_sta.c
++++ b/wpa_supplicant/wnm_sta.c
+@@ -1114,6 +1114,9 @@ static void wnm_bss_tm_connect(struct wp
+ 			wpa_s, wpa_s->wnm_dialog_token, WNM_BSS_TM_ACCEPT,
+ 			MBO_TRANSITION_REJECT_REASON_UNSPECIFIED, 0,
+ 			bss->bssid);
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++        sf_update_btm_status(MBO_TRANSITION_REJECT_REASON_UNSPECIFIED);
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
+ 	}
+ 
+ 	if (bss == wpa_s->current_bss) {
+@@ -1189,6 +1192,9 @@ send_bss_resp_fail:
+ 		wnm_send_bss_transition_mgmt_resp(wpa_s,
+ 						  wpa_s->wnm_dialog_token,
+ 						  status, reason, 0, NULL);
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++        sf_update_btm_status(reason);
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
+ 	}
+ 	wnm_deallocate_memory(wpa_s);
+ 
+@@ -1388,10 +1394,13 @@ static int wnm_fetch_scan_results(struct
+ 	return 1;
+ }
+ 
+-
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++void ieee802_11_rx_bss_trans_mgmt_req(struct wpa_supplicant *wpa_s, const u8 *pos, const u8 *end, int reply)
++#else  /* CONFIG_DRIVER_NL80211_SIFLOWER */
+ static void ieee802_11_rx_bss_trans_mgmt_req(struct wpa_supplicant *wpa_s,
+ 					     const u8 *pos, const u8 *end,
+ 					     int reply)
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
+ {
+ 	unsigned int beacon_int;
+ 	u8 valid_int;
+@@ -1436,6 +1445,9 @@ static void ieee802_11_rx_bss_trans_mgmt
+ 			wpa_s, wpa_s->wnm_dialog_token,
+ 			wpa_s->reject_btm_req_reason,
+ 			MBO_TRANSITION_REJECT_REASON_UNSPECIFIED, 0, NULL);
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++        sf_update_btm_status(MBO_TRANSITION_REJECT_REASON_UNSPECIFIED);
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
+ 		return;
+ 	}
+ #endif /* CONFIG_MBO && CONFIG_TESTING_OPTIONS */
+@@ -1536,6 +1548,9 @@ static void ieee802_11_rx_bss_trans_mgmt
+ 				WNM_BSS_TM_REJECT_NO_SUITABLE_CANDIDATES,
+ 				MBO_TRANSITION_REJECT_REASON_UNSPECIFIED, 0,
+ 				NULL);
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++            sf_update_btm_status(MBO_TRANSITION_REJECT_REASON_UNSPECIFIED);
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
+ 			return;
+ 		}
+ 
+@@ -1601,6 +1616,9 @@ static void ieee802_11_rx_bss_trans_mgmt
+ 		wnm_send_bss_transition_mgmt_resp(
+ 			wpa_s, wpa_s->wnm_dialog_token, status,
+ 			MBO_TRANSITION_REJECT_REASON_UNSPECIFIED, 0, NULL);
++#ifdef CONFIG_DRIVER_NL80211_SIFLOWER
++        sf_update_btm_status(MBO_TRANSITION_REJECT_REASON_UNSPECIFIED);
++#endif /* CONFIG_DRIVER_NL80211_SIFLOWER */
+ 	}
+ }
+ 

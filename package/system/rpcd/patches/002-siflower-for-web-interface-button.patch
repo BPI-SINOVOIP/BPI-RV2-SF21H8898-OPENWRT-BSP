@@ -1,0 +1,76 @@
+Index: rpcd-2022-02-07-909f2a04/uci.c
+===================================================================
+--- rpcd-2022-02-07-909f2a04.orig/uci.c
++++ rpcd-2022-02-07-909f2a04/uci.c
+@@ -1320,6 +1320,26 @@ rpc_uci_trigger_event(struct ubus_contex
+ 	free(pkg);
+ }
+ 
++static void
++rpc_uci_trigger_event_interface(struct ubus_context *ctx, const char *config)
++{
++	char *pkg = strdup(config);
++	static struct blob_buf b;
++	uint32_t id;
++
++	if (!ubus_lookup_id(ctx, "service", &id)) {
++		void *c;
++
++		blob_buf_init(&b, 0);
++		blobmsg_add_string(&b, "type", "config.change");
++		c = blobmsg_open_table(&b, "data");
++		blobmsg_add_string(&b, "package", pkg);
++		blobmsg_close_table(&b, c);
++		system("/sbin/wifi");
++	}
++	free(pkg);
++}
++
+ static int
+ rpc_uci_revert_commit(struct ubus_context *ctx, struct blob_attr *msg, bool commit)
+ {
+@@ -1454,6 +1474,20 @@ rpc_uci_apply_config(struct ubus_context
+ 	return 0;
+ }
+ 
++static int
++rpc_uci_apply_config_interface(struct ubus_context *ctx, char *config)
++{
++	struct uci_package *p = NULL;
++
++	if (!uci_load(cursor, config, &p)) {
++		uci_commit(cursor, &p, false);
++		uci_unload(cursor, p);
++	}
++	rpc_uci_trigger_event_interface(ctx, config);
++
++	return 0;
++}
++
+ static void
+ rpc_uci_copy_file(const char *src, const char *target, const char *file)
+ {
+@@ -1629,7 +1663,14 @@ rpc_uci_apply(struct ubus_context *ctx,
+ 
+ 			rpc_uci_copy_file(RPC_UCI_DIR, RPC_SNAPSHOT_FILES, config);
+ 			rpc_uci_copy_file(tmp, RPC_SNAPSHOT_DELTA, config);
+-			rpc_uci_apply_config(ctx, config);
++
++			/*RM#16470 add ubus method apply_interface to call /sbin/wifi instead of etc/init.d/network reload*/
++			if (!strcmp(method, "apply_interface")) {
++				rpc_uci_apply_config_interface(ctx, config);
++			}
++			else {
++				rpc_uci_apply_config(ctx, config);
++			}
+ 		}
+ 
+ 		globfree(&gl);
+@@ -1772,6 +1813,7 @@ int rpc_uci_api_init(struct ubus_context
+ 		UBUS_METHOD("revert",   rpc_uci_revert,   rpc_uci_config_policy),
+ 		UBUS_METHOD("commit",   rpc_uci_commit,   rpc_uci_config_policy),
+ 		UBUS_METHOD("apply",    rpc_uci_apply,    rpc_uci_apply_policy),
++		UBUS_METHOD("apply_interface",    rpc_uci_apply,    rpc_uci_apply_policy),
+ 		UBUS_METHOD("confirm",  rpc_uci_confirm,  rpc_uci_rollback_policy),
+ 		UBUS_METHOD("rollback", rpc_uci_rollback, rpc_uci_rollback_policy),
+ 		UBUS_METHOD_NOARG("reload_config", rpc_uci_reload),

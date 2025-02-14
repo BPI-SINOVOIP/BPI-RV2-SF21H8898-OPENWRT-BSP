@@ -1,0 +1,35 @@
+Index: hostapd-2022-01-16-cff80b4f/src/ap/hostapd.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/hostapd.c
++++ hostapd-2022-01-16-cff80b4f/src/ap/hostapd.c
+@@ -2418,7 +2418,7 @@ int hostapd_setup_interface(struct hosta
+ 	ret = setup_interface(iface);
+ 	if (ret) {
+ 		wpa_printf(MSG_ERROR, "%s: Unable to setup interface.",
+-			   iface->conf->bss[0]->iface);
++			   iface->conf ? iface->conf->bss[0]->iface : "N/A");	
+ 		return -1;
+ 	}
+ 
+Index: hostapd-2022-01-16-cff80b4f/wpa_supplicant/mesh.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/wpa_supplicant/mesh.c
++++ hostapd-2022-01-16-cff80b4f/wpa_supplicant/mesh.c
+@@ -269,7 +269,7 @@ static int wpas_mesh_complete(struct wpa
+ 		wpa_printf(MSG_ERROR,
+ 			   "mesh: RSN initialization failed - deinit mesh");
+ 		wpa_supplicant_mesh_deinit(wpa_s, false);
+-		return -1;
++		return -1;
+ 	}
+ 
+ 	if (ssid->key_mgmt & WPA_KEY_MGMT_SAE) {
+@@ -301,8 +301,6 @@ static int wpas_mesh_complete(struct wpa
+ 			ssid->id);
+ 		wpas_notify_mesh_group_started(wpa_s, ssid);
+ 	}
+-
+-	return ret;
+ }
+ 
+ 

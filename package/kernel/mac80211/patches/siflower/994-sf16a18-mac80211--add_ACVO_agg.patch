@@ -1,0 +1,13 @@
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -299,6 +299,10 @@ config MAC80211_PRIV_IOCTL
+ 	bool "Enable mac80211's private ioctl function, this is add by siflower"
+ 	depends on MAC80211
+ 
++config WLAN_VENDOR_RWNX
++	bool "Enable rwnx macro in mac80211, this is add by siflower"
++	depends on MAC80211
++
+ config MAC80211_STA_HASH_MAX_SIZE
+ 	int "Station hash table maximum size" if MAC80211_DEBUG_MENU
+ 	default 0

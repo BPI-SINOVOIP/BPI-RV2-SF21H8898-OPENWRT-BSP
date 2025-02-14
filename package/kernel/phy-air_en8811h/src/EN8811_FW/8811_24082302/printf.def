@@ -1,0 +1,521 @@
+==CURRENT_ID 0208
+0000 02  [before ESD] eFuse raw0  = 0x%x (tx amp) ÿefuse.cÿ69ÿEfuseDownloadÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/hw_drv
+0001 02  [before ESD] eFuse raw1  = 0x%x (hvga dco) ÿefuse.cÿ70ÿEfuseDownloadÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/hw_drv
+0002 02  [before ESD] eFuse raw2  = 0x%x (adc sargain) ÿefuse.cÿ71ÿEfuseDownloadÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/hw_drv
+0003 02  [before ESD] eFuse raw8  = 0x%x (tx ofs) ÿefuse.cÿ72ÿEfuseDownloadÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/hw_drv
+0004 02  [before ESD] eFuse raw9  = 0x%x (R50) ÿefuse.cÿ73ÿEfuseDownloadÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/hw_drv
+0005 02  [before ESD] eFuse raw25 = 0x%x (Rext) ÿefuse.cÿ74ÿEfuseDownloadÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/hw_drv
+0006 02 Read Token Ring @_fldRW_smireg__Pwdnÿsmi.cÿ14ÿTokenRingReadÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/hw_drv
+0007 02 Write Token Ring @_fldRW_smireg__Pwdnÿsmi.cÿ47ÿTokenRingWriteÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/hw_drv
+0008 02 LINE_SIDE_EMI_CLK_INITIAL: %dÿecnt_cmd.cÿ196ÿLINE_SIDE_EMI_CLK_INITIALÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0009 02 EMI Loop Cnt: %dÿecnt_cmd.cÿ349ÿLINE_SIDE_EMI_FWWA_ADC_CLK_RSTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+000A 02 BD Cnt:[%d], PB:%d, PD:%d, Diff:%dÿecnt_cmd.cÿ362ÿLINE_SIDE_EMI_FWWA_ADC_CLK_RSTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+000B 02 BD Phase Modify -- Diff: %dÿecnt_cmd.cÿ366ÿLINE_SIDE_EMI_FWWA_ADC_CLK_RSTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+000C 02 AC Cnt:[%d], PA:%d, PC:%d, Diff:%dÿecnt_cmd.cÿ382ÿLINE_SIDE_EMI_FWWA_ADC_CLK_RSTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+000D 02 AC Phase Modify -- Diff: %dÿecnt_cmd.cÿ386ÿLINE_SIDE_EMI_FWWA_ADC_CLK_RSTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+000E 02 Final Phase A:%d, B:%d, C:%d, D:%dÿecnt_cmd.cÿ401ÿLINE_SIDE_EMI_FWWA_ADC_CLK_RSTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+000F 02 idx16=%x,%x,%x,%xÿecnt_cmd.cÿ482ÿHWLA_ADC_OUT_DUMPÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0010 02 idx20=%x,%x,%x,%xÿecnt_cmd.cÿ488ÿHWLA_ADC_OUT_DUMPÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0011 02 Pair A: %dÿecnt_cmd.cÿ492ÿHWLA_ADC_OUT_DUMPÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0012 02 Pair B: %dÿecnt_cmd.cÿ495ÿHWLA_ADC_OUT_DUMPÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0013 02 Pair C: %dÿecnt_cmd.cÿ498ÿHWLA_ADC_OUT_DUMPÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0014 02 Pair D: %dÿecnt_cmd.cÿ501ÿHWLA_ADC_OUT_DUMPÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0015 02 Pair Phase %d, %d, %d, %dÿecnt_cmd.cÿ511ÿHWLA_ADC_OUT_DUMPÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0016 02 Pair Phase %d, %d, %d, %dÿecnt_cmd.cÿ518ÿHWLA_ADC_OUT_DUMPÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0017 02 Ini Angle: %dÿecnt_cmd.cÿ555ÿPHASE_CALÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0018 02 Ori Value: %d %d %d %dÿecnt_cmd.cÿ562ÿPHASE_CALÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0019 02 Abs Value: %d %d %d %dÿecnt_cmd.cÿ563ÿPHASE_CALÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+001A 02 Max/Min Value: %d %dÿecnt_cmd.cÿ575ÿPHASE_CALÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+001B 02 Pair Angle: %dÿecnt_cmd.cÿ590ÿPHASE_CALÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+001C 02 Start BackupCL22ÿecnt_cmd.cÿ860ÿLINE_SIDE_EXTERNAL_1G_LOOPBACKÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+001D 02 RECOVERY EXTERNAL_1G_LOOPBACKÿecnt_cmd.cÿ935ÿLINE_SIDE_EXTERNAL_1G_LOOPBACK_RECOVERYÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+001E 02 Start RecoverCL22ÿecnt_cmd.cÿ962ÿLINE_SIDE_EXTERNAL_1G_LOOPBACK_RECOVERYÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+001F 02  PRBS_GEN_CHKÿecnt_cmd.cÿ989ÿPRBS_GEN_CHKÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0020 02 Start BackupCL22ÿecnt_cmd.cÿ1287ÿECNT_SYSTEM_SIDE_XBZ_LOOPBACK2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0021 02 Force 2.5G doneÿecnt_cmd.cÿ1329ÿECNT_SYSTEM_SIDE_XBZ_LOOPBACK2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0022 02 XBZ common setting doneÿecnt_cmd.cÿ1400ÿECNT_SYSTEM_SIDE_XBZ_LOOPBACK2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0023 02 Wait XBZ POWER ONÿecnt_cmd.cÿ1405ÿECNT_SYSTEM_SIDE_XBZ_LOOPBACK2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0024 02 PMA RX BYPASS ENABLEÿecnt_cmd.cÿ1476ÿECNT_SYSTEM_SIDE_XBZ_LOOPBACK2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0025 02 LPBK mode 2 PKT enableÿecnt_cmd.cÿ1514ÿECNT_SYSTEM_SIDE_XBZ_LOOPBACK2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0026 02 Deskew doneÿecnt_cmd.cÿ1594ÿECNT_SYSTEM_SIDE_XBZ_LOOPBACK2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0027 02 LPBK mode2 PKT enableÿecnt_cmd.cÿ1601ÿECNT_SYSTEM_SIDE_XBZ_LOOPBACK2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0028 02 TX send PKT doneÿecnt_cmd.cÿ1623ÿECNT_SYSTEM_SIDE_XBZ_LOOPBACK2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0029 02 RX receive PKT doneÿecnt_cmd.cÿ1627ÿECNT_SYSTEM_SIDE_XBZ_LOOPBACK2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+002A 02 Start RecoverCL22ÿecnt_cmd.cÿ1726ÿXBZ_LOOPBACK2_3_Common_RECOVERYÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+002B 02 RECOVERY LPBK2ÿecnt_cmd.cÿ1745ÿECNT_SYSTEM_SIDE_XBZ_LOOPBACK2_RECOVERYÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+002C 02  LPBK_MODE3_CAL Performÿecnt_cmd.cÿ1788ÿLPBK_MODE3_CALÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+002D 02 MST modeÿecnt_cmd.cÿ1809ÿLPBK_MODE3_CALÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+002E 02 SLV modeÿecnt_cmd.cÿ1816ÿLPBK_MODE3_CALÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+002F 02 Normal-Link 2 pair doneÿecnt_cmd.cÿ1917ÿLPBK_MODE3_CALÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0030 02 WAIT PHYCTRL rg_par_en setting doneÿecnt_cmd.cÿ1932ÿLPBK_MODE3_CALÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0031 02 2p5g noemal link doneÿecnt_cmd.cÿ1934ÿLPBK_MODE3_CALÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0032 02 Start LPBK3ÿecnt_cmd.cÿ1955ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0033 02 Start BackupCL22ÿecnt_cmd.cÿ1957ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0034 02 XBZ common setting doneÿecnt_cmd.cÿ2082ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0035 02 Initial CM coefÿecnt_cmd.cÿ2110ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0036 02 Freeze EC Coef keep zeroÿecnt_cmd.cÿ2149ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0037 02 DV simÿecnt_cmd.cÿ2154ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0038 02 LPBK_mode3_PKT_ENABLEÿecnt_cmd.cÿ2435ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0039 02 LPBK_mode 2 pair doneÿecnt_cmd.cÿ2484ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+003A 02 PHYCTRL_STATE = %dÿecnt_cmd.cÿ2507ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+003B 02 PHYCTRL_TRANS_STATE = %dÿecnt_cmd.cÿ2508ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+003C 02 RCTRL_STATE = %dÿecnt_cmd.cÿ2509ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+003D 02 TR_STATE = %dÿecnt_cmd.cÿ2510ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+003E 02 EQFC_STATE = %dÿecnt_cmd.cÿ2511ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+003F 02 ECNC_STATE = %dÿecnt_cmd.cÿ2512ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0040 02 PHYCTRL_STATE = %dÿecnt_cmd.cÿ2533ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0041 02 PHYCTRL_TRANS_STATE = %dÿecnt_cmd.cÿ2534ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0042 02 RCTRL_STATE = %dÿecnt_cmd.cÿ2535ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0043 02 TR_STATE = %dÿecnt_cmd.cÿ2536ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0044 02 EQFC_STATE = %dÿecnt_cmd.cÿ2537ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0045 02 ECNC_STATE = %dÿecnt_cmd.cÿ2538ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0046 02 LPBK3 PISCAN doneÿecnt_cmd.cÿ2542ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0047 02 WAIT PHYCTRL rg_par_en setting doneÿecnt_cmd.cÿ2565ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0048 02 ro_sche_cst != FILTER_ERR doneÿecnt_cmd.cÿ2577ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0049 02 ro_phyctrl_trans_cnt_state != 0x3 doneÿecnt_cmd.cÿ2581ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+004A 02 ro_pma_tx_mode != SEND_N_5G doneÿecnt_cmd.cÿ2585ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+004B 02 LPBK_mode3_PKT_ENABLEÿecnt_cmd.cÿ2602ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+004C 02 LPBK_mode3 doneÿecnt_cmd.cÿ2641ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+004D 02 pair_ab_swapÿecnt_cmd.cÿ2644ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+004E 02 pair_ab_Noswapÿecnt_cmd.cÿ2648ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+004F 02 RECOVERY LPBK3ÿecnt_cmd.cÿ2662ÿLINE_SIDE_XBZ_LOOPBACK_MODE3_CONFIG_RECOVERYÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0050 02 RGS_TADC = %dÿecnt_cmd.cÿ2767ÿLINE_SIDE_TADC_READÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0051 02 TADC_val = %dÿecnt_cmd.cÿ2768ÿLINE_SIDE_TADC_READÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0052 02 Offset_Compensate_pos = %dÿecnt_cmd.cÿ2769ÿLINE_SIDE_TADC_READÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0053 02  Slope_x10000 = %dÿecnt_cmd.cÿ2770ÿLINE_SIDE_TADC_READÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0054 02 Temperature = %dÿecnt_cmd.cÿ2771ÿLINE_SIDE_TADC_READÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0055 02 UDEF_KPKI_VAL_SET value = %dÿecnt_cmd.cÿ2794ÿUDEF_KPKI_VAL_SETÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0056 02 UDEF_KPKI_VAL_SET local = %dÿecnt_cmd.cÿ2795ÿUDEF_KPKI_VAL_SETÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0057 02 EC OFFÿecnt_cmd.cÿ2841ÿECNC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0058 02 EC ONÿecnt_cmd.cÿ2846ÿECNC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0059 02 NC OFFÿecnt_cmd.cÿ2859ÿECNC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+005A 02 NC ONÿecnt_cmd.cÿ2866ÿECNC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+005B 02 FC_FILTER OFFÿecnt_cmd.cÿ2891ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+005C 02 FC_FILTER ONÿecnt_cmd.cÿ2912ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+005D 02 FBF_FILTER OFFÿecnt_cmd.cÿ2926ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+005E 02 FBF_FILTER ONÿecnt_cmd.cÿ2939ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+005F 02 FDC_FILTER OFFÿecnt_cmd.cÿ2954ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0060 02 FDC_FILTER ONÿecnt_cmd.cÿ2967ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0061 02 FFF_UPDATE OFFÿecnt_cmd.cÿ2980ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0062 02 FFF_UPDATE ONÿecnt_cmd.cÿ2993ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0063 02 FC_UPDATE OFFÿecnt_cmd.cÿ3015ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0064 02 FC_UPDATE ONÿecnt_cmd.cÿ3035ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0065 02 FBF_UPDATE OFFÿecnt_cmd.cÿ3049ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0066 02 FBF_UPDATE ONÿecnt_cmd.cÿ3062ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0067 02 FDC OFFÿecnt_cmd.cÿ3076ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0068 02 FDC ONÿecnt_cmd.cÿ3089ÿEQFC_RGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0069 02 Release ASIX MAC RESETÿecnt_cmd.cÿ3918ÿASIX_MAC_SPEED_CONFIG_HSGMII_2500M_LS_2500Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+006A 02  5us=%d usÿecnt_cmd.cÿ3930ÿSYSTEM_SIDE_SPEED_CONFIG_HSGMII_2500M_LS_2500Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+006B 02 Release ASIX MAC RESETÿecnt_cmd.cÿ3968ÿSYSTEM_SIDE_SPEED_CONFIG_HSGMII_2500M_LS_2500Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+006C 02 Release ASIX MAC RESETÿecnt_cmd.cÿ4012ÿASIX_MAC_SPEED_CONFIG_HSGMII_2500M_LS_1000Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+006D 02  HSGMII_2500M_LS_1000Mÿecnt_cmd.cÿ4024ÿSYSTEM_SIDE_SPEED_CONFIG_HSGMII_2500M_LS_1000Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+006E 02 Release ASIX MAC RESETÿecnt_cmd.cÿ4064ÿSYSTEM_SIDE_SPEED_CONFIG_HSGMII_2500M_LS_1000Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+006F 02 Release ASIX MAC RESETÿecnt_cmd.cÿ4112ÿASIX_MAC_SPEED_CONFIG_HSGMII_2500M_LS_100Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0070 02  HSGMII_2500M_LS_100Mÿecnt_cmd.cÿ4124ÿSYSTEM_SIDE_SPEED_CONFIG_HSGMII_2500M_LS_100Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0071 02 Release ASIX MAC RESETÿecnt_cmd.cÿ4169ÿSYSTEM_SIDE_SPEED_CONFIG_HSGMII_2500M_LS_100Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0072 02 SYSTEM_SIDE_SPEED_CONFIG_SGMII_1000M_LS_100Mÿecnt_cmd.cÿ4174ÿSYSTEM_SIDE_SPEED_CONFIG_SGMII_1000M_LS_100Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0073 02 SpeedSelCode = 0(sgmii)(e1)(ptp)ÿecnt_cmd.cÿ4219ÿSYSTEM_SIDE_SPEED_CONFIG_SGMII_1000M_LS_1000M_E1_forPTPÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0074 02 SYSTEM_SIDE_SPEED_CONFIG_SGMII_1000M_LS_1000Mÿecnt_cmd.cÿ4298ÿSYSTEM_SIDE_SPEED_CONFIG_SGMII_1000M_LS_1000Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0075 02 SYSTEM_SIDE_SPEED_CONFIG_SGMII_RA_100Mÿecnt_cmd.cÿ4406ÿSYSTEM_SIDE_SPEED_CONFIG_SGMII_RA_100Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0076 02 SYSTEM_SIDE_SPEED_CONFIG_SGMII_RA_100M_HALFÿecnt_cmd.cÿ4515ÿSYSTEM_SIDE_SPEED_CONFIG_SGMII_RA_100M_HALFÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0077 02 SpeedSelCode = 0(sgmii)ÿecnt_cmd.cÿ4640ÿSYSTEM_SIDE_SPEED_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0078 02 SpeedSelCode = 1(hsgmii)ÿecnt_cmd.cÿ4648ÿSYSTEM_SIDE_SPEED_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0079 02 SpeedSelCode = 9(sgmii_ra_100)ÿecnt_cmd.cÿ4656ÿSYSTEM_SIDE_SPEED_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+007A 02 SpeedSelCode = 8(hsgmii_ls_1000)ÿecnt_cmd.cÿ4664ÿSYSTEM_SIDE_SPEED_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+007B 02 SpeedSelCode = 7(hsgmii_ls_100)ÿecnt_cmd.cÿ4672ÿSYSTEM_SIDE_SPEED_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+007C 02 SpeedSelCode = 6(sgmii_ls_100)ÿecnt_cmd.cÿ4680ÿSYSTEM_SIDE_SPEED_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+007D 02 SpeedSelCode = 6(sgmii_ls_100)ÿecnt_cmd.cÿ4688ÿSYSTEM_SIDE_SPEED_CONFIGÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+007E 02 ECNT_SYSTEM_SIDE_XGMII_CMI_LOOPBACKÿecnt_cmd.cÿ4712ÿECNT_SYSTEM_SIDE_XGMII_CMI_LOOPBACKÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+007F 02  Force 1000M testÿft_cmd.cÿ2362ÿFT_LINE_SIDE_ECHO_CANCALLATION_GBE_CHECKÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0080 02  Force 2500M testÿft_cmd.cÿ2673ÿFT_LINE_SIDE_ECHO_CANCALLATION_XBZ_CHECKÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0081 02 ASIX eFuse read[%d]=0x%xÿft_cmd.cÿ4977ÿFT_EFUST_TESTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0082 02 HWLA_RX ADC Pair_ABCD Test()ÿft_cmd.cÿ5403ÿFT_LINE_SIDE_HWLA_RX_ADCÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0083 02 unionECNT_HSTCMD_CTRL.ABIT.bit0 = %dÿft_cmd.cÿ5413ÿFT_LINE_SIDE_HWLA_RX_ADCÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0084 02 HWLA_RX ADC Pair_ABCD Test() END!!!ÿft_cmd.cÿ5715ÿFT_LINE_SIDE_HWLA_RX_ADCÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0085 02 Line Side CMD EXECÿhst_cmd.cÿ45ÿhst_cmd_executeÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0086 02 LineSideCmdDispatch()ÿhst_cmd.cÿ78ÿLineSideCmdExecuteÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0087 02 LineSideCmdDispatch_INTDisableÿhst_cmd_manage.cÿ25ÿLineSideCmdDispatchÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0088 02 LineSideCmdDispatch_ECNT()ÿhst_cmd_manage.cÿ35ÿLineSideCmdDispatchÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0089 02 LineSideCmdDispatch_FT()ÿhst_cmd_manage.cÿ47ÿLineSideCmdDispatchÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+008A 02 Undefined HST command, cmd_mode=0x%xÿhst_cmd_manage.cÿ71ÿLineSideCmdDispatchÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+008B 02 HSTCMD_STATUS_UNSUPPORTÿhst_cmd_manage.cÿ74ÿLineSideCmdDispatchÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+008C 02 HCMD, Operation = %d, Lane[%d] Execute-> cmd_buf:%xÿhst_cmd_manage.cÿ86ÿLineSideCmdDispatchÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+008D 02 LineSideCmdDispatch_INTDisableÿhst_cmd_manage.cÿ103ÿSystemSideCmdDispatchÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+008E 02 Undefined HST command, cmd_code=0x%xÿhst_cmd_manage.cÿ136ÿSystemSideCmdDispatchÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+008F 02 HCMD, Operation = %d, Lane[%d] Execute-> cmd_buf:%xÿhst_cmd_manage.cÿ147ÿSystemSideCmdDispatchÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0090 02   *** ECNT_CMD_LINE_SIDE_SUPPORT_SURGE_5R *** ÿhst_cmd_manage.cÿ195ÿLineSideCmdDispatch_ECNTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0091 02   *** ECNT_CMD_LINE_SIDE_LPBK_MODE3 *** ÿhst_cmd_manage.cÿ288ÿLineSideCmdDispatch_ECNTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0092 02   *** ECNT_CMD_LINE_SIDE_LPBK_MODE3 RECOVERY*** ÿhst_cmd_manage.cÿ299ÿLineSideCmdDispatch_ECNTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0093 02 ECNT_CMD_LINE_SIDE_LINK_CHANGE_GPIO8_RECOVERYÿhst_cmd_manage.cÿ355ÿLineSideCmdDispatch_ECNTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0094 02 ECNT_CMD_LINE_SIDE_TADC_READÿhst_cmd_manage.cÿ361ÿLineSideCmdDispatch_ECNTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0095 02 Hst_Cmd_0xFA startÿhst_cmd_manage.cÿ384ÿLineSideCmdDispatch_ECNTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0096 02 Hst_Cmd_0xFA endÿhst_cmd_manage.cÿ388ÿLineSideCmdDispatch_ECNTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0097 02 Undefined HST command, cmd_code=0x%xÿhst_cmd_manage.cÿ446ÿLineSideCmdDispatch_ECNTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0098 02 CMDFlowStamp = %dÿhst_cmd_manage.cÿ469ÿLineSideCmdDispatch_FTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0099 02 FT_LINE_SIDE_HWLA_RX_ADC()ÿhst_cmd_manage.cÿ652ÿLineSideCmdDispatch_FTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+009A 02 Undefined HST command, cmd_code=0x%xÿhst_cmd_manage.cÿ706ÿLineSideCmdDispatch_FTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+009B 02 ASIX_8051_INFO_COPY_DONE ÿhst_cmd_manage.cÿ774ÿLineSideCmdDispatch_ASIXÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+009C 02 from ASIX_8051 to SoC interrupt ÿhst_cmd_manage.cÿ775ÿLineSideCmdDispatch_ASIXÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+009D 02 ASIX_LINK_CHANGE ÿhst_cmd_manage.cÿ788ÿLineSideCmdDispatch_ASIXÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+009E 02 ASIX success!ÿhst_cmd_manage.cÿ794ÿLineSideCmdDispatch_ASIXÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+009F 02 Calibration All passÿhst_cmd_manage.cÿ836ÿLineSideCmdDispatch_ASIXÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00A0 02 Calibration result0 check =%xÿhst_cmd_manage.cÿ842ÿLineSideCmdDispatch_ASIXÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00A1 02 Calibration result1 check =%xÿhst_cmd_manage.cÿ843ÿLineSideCmdDispatch_ASIXÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00A2 02 ASIX K Var before write eFuse raw[ %d]=0x%x  ÿhst_cmd_manage.cÿ906ÿLineSideCmdDispatch_ASIXÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00A3 02 ASIX eFuse read[%d]=0x%xÿhst_cmd_manage.cÿ914ÿLineSideCmdDispatch_ASIXÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00A4 02 Undefined HST command, cmd_code=0x%xÿhst_cmd_manage.cÿ964ÿSystemSideCmdDispatch_ECNTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00A5 02 Undefined HST command, cmd_code=0x%xÿhst_cmd_manage.cÿ984ÿSystemSideCmdDispatch_FTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00A6 02 Run Backup_AN_CTRLÿPhyAN.cÿ11ÿBackup_AN_CTRLÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00A7 02 Run Recover_AN_CTRLÿPhyAN.cÿ34ÿRecover_AN_CTRLÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00A8 02 AN_CONFIGURE, Force to 100 successfulÿPhyAN.cÿ114ÿAN_CONFIGUREÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00A9 02 AN_CONFIGURE, Force to 2500 successfulÿPhyAN.cÿ133ÿAN_CONFIGUREÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00AA 02 AN_CONFIGURE, Force to 100 successfulÿPhyAN.cÿ160ÿAN_CONFIGUREÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00AB 02 AN_CONFIGURE, Force to 1000 successfulÿPhyAN.cÿ177ÿAN_CONFIGUREÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00AC 02 AN_CONFIGURE, Force to 100 successfulÿPhyAN.cÿ195ÿAN_CONFIGUREÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00AD 02 AN_CONFIGURE, Force to 10 successfulÿPhyAN.cÿ215ÿAN_CONFIGUREÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00AE 02 AN_CONFIGURE, default caseÿPhyAN.cÿ220ÿAN_CONFIGUREÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00AF 02 Mute Tx, Force 100M spd, Recover Tx, Re-ANÿPhyAN.cÿ274ÿForce100MSpd_ReANÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00B0 02 Speed Change, While(1)=%dÿPhyAN.cÿ501ÿPHY_CHANNEL_MANAGEMENTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00B1 02 PRE_LS=%d, PRE_SS=%d, CUR_LS=%d, CUR_SS=%dÿPhyAN.cÿ502ÿPHY_CHANNEL_MANAGEMENTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00B2 02  LS != LINK_DN, time=%dusÿPhyAN.cÿ507ÿPHY_CHANNEL_MANAGEMENTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00B3 02  LS == LINK_DN, time=%dusÿPhyAN.cÿ527ÿPHY_CHANNEL_MANAGEMENTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00B4 02 SPEED_CHG, SPEED_LUT = %dÿPhyAN.cÿ574ÿSPEED_CHG_HANDLERÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00B5 02 2.5G, SPEED_LUT = %dÿPhyAN.cÿ586ÿSPEED_CHG_HANDLERÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00B6 02 1000M, SPEED_LUT = %dÿPhyAN.cÿ614ÿSPEED_CHG_HANDLERÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00B7 02 100M, SPEED_LUT = %dÿPhyAN.cÿ648ÿSPEED_CHG_HANDLERÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00B8 02 Restore 2.5G cap when link upÿPhyAN.cÿ669ÿSPEED_CHG_HANDLERÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00B9 02 SPEED_LUT = %dÿPhyAN.cÿ718ÿSPEED_CHG_HANDLERÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00BA 02  PHY_RestartAN, type=%d, 5us=%d usÿPhyAN.cÿ958ÿPHY_RestartANÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00BB 02 (1) line side link down !!! => reANÿPhyAN.cÿ987ÿPHY_RestartANÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00BC 02 (2) phyctrl hang in Fine_Adjust !!! => reANÿPhyAN.cÿ990ÿPHY_RestartANÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00BD 02 (3) LPI LDPC FAIL CNT DETECT !!! => reANÿPhyAN.cÿ993ÿPHY_RestartANÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00BE 02 (4) rctrl hang in SLV DESKEW !!! => reANÿPhyAN.cÿ996ÿPHY_RestartANÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00BF 02 (5) No Signal Detect !!! => reANÿPhyAN.cÿ999ÿPHY_RestartANÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00C0 02 (6) RCTRL FAST PASS Happen !!! => reANÿPhyAN.cÿ1002ÿPHY_RestartANÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00C1 02 (8) Link Partner AQR Master Mode !!! => reANÿPhyAN.cÿ1005ÿPHY_RestartANÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00C2 02 (9) AN HANGE STAGE 5 !!! => reANÿPhyAN.cÿ1008ÿPHY_RestartANÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00C3 02  RestartAN Abnormal ÿPhyAN.cÿ1011ÿPHY_RestartANÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00C4 02 LS Link change flag = 1 (%d)ÿPhyAN.cÿ1420ÿPHY_SPEED_MONITORÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00C5 02 LS Link change flag = 1 (%d)ÿPhyAN.cÿ1460ÿPHY_SPEED_MONITORÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00C6 02 LS Link change flag = 1 (%d), 5us=%d usÿPhyAN.cÿ1505ÿPHY_SPEED_MONITORÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00C7 02 PTP init (for step2)ÿPhyAN.cÿ1584ÿPHY_SPEED_MONITORÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00C8 02  rx_lpi.detected !!!ÿPhyAN.cÿ1624ÿPHY_SPEED_MONITORÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00C9 02  LPI & LDPC Decode Error -> Re-AN !!!, FailCntPre=%d FailCnt=%dÿPhyAN.cÿ1656ÿPHY_SPEED_MONITORÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00CA 02  SNR <= 22, Re-AN !!!, A=%d B=%d C=%d D=%dÿPhyAN.cÿ1679ÿPHY_SPEED_MONITORÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00CB 02 ANACAL CTRL in INIT STATEÿPhyCalibration.cÿ45ÿBASET_ANACAL_State_Actionÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00CC 02  eFuse r50 rx RC K 0x%xÿPhyCalibration.cÿ647ÿRC_Calibrationÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00CD 02  eFuse rext = 0x%x (rext_trim) ÿPhyCalibration.cÿ1460ÿBG_Calibrationÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00CE 02  eFuse rext = 0x%x (bg_rasel) ÿPhyCalibration.cÿ1464ÿBG_Calibrationÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00CF 02  eFuse r50 = 0x%x (r50 a) ÿPhyCalibration.cÿ1634ÿR50_Calibrationÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00D0 02  eFuse r50 = 0x%x (r50 b) ÿPhyCalibration.cÿ1644ÿR50_Calibrationÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00D1 02  eFuse r50 = 0x%x (r50 c) ÿPhyCalibration.cÿ1654ÿR50_Calibrationÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00D2 02  eFuse r50 = 0x%x (r50 d) ÿPhyCalibration.cÿ1664ÿR50_Calibrationÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00D3 02  eFuse tx ofs = 0x%x (ofs a) ÿPhyCalibration.cÿ2606ÿTX_OFS_Compensation_Updateÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00D4 02  eFuse tx ofs = 0x%x (ofs b) ÿPhyCalibration.cÿ2616ÿTX_OFS_Compensation_Updateÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00D5 02  eFuse tx ofs = 0x%x (ofs c) ÿPhyCalibration.cÿ2626ÿTX_OFS_Compensation_Updateÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00D6 02  eFuse tx ofs = 0x%x (ofs d) ÿPhyCalibration.cÿ2636ÿTX_OFS_Compensation_Updateÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00D7 02  eFuse i2mpb_a  = 0x%x (tx amp a) ÿPhyCalibration.cÿ2715ÿTX_AMP_Speed_Compensation_Updateÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00D8 02  eFuse i2mpb_b  = 0x%x (tx amp b) ÿPhyCalibration.cÿ2749ÿTX_AMP_Speed_Compensation_Updateÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00D9 02  eFuse i2mpb_c  = 0x%x (tx amp c) ÿPhyCalibration.cÿ2783ÿTX_AMP_Speed_Compensation_Updateÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00DA 02  eFuse i2mpb_d  = 0x%x (tx amp d) ÿPhyCalibration.cÿ2817ÿTX_AMP_Speed_Compensation_Updateÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00DB 02 C_x =%dÿPhyCalibration.cÿ3153ÿCurveFitÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00DC 02 C_y =%dÿPhyCalibration.cÿ3154ÿCurveFitÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00DD 02 PAM2_PWR_A = %dÿPhyCalibration.cÿ3380ÿRead_ADC_DOUT_Pwrÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00DE 02 Step = %dÿPhyCalibration.cÿ3436ÿPI_FREE_MOVEÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00DF 02 Step_DN_pre = %dÿPhyCalibration.cÿ3480ÿPI_FREE_MOVEÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00E0 02 S_idx =%dÿPhyCalibration.cÿ3697ÿOPT_PI_AUTO_SEARCHÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00E1 02  RX AGC BW Set 150MHz ÿPhyHwDrv.cÿ174ÿRX_BandWidthÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00E2 02  RX AGC BW Set 100MHz ÿPhyHwDrv.cÿ204ÿRX_BandWidthÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00E3 02  MASTER mode, 5us=%d usÿPhyHwDrv.cÿ278ÿRetrain_Path3ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00E4 02  SLAVE mode, 5us=%d usÿPhyHwDrv.cÿ284ÿRetrain_Path3ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00E5 02 2.5G start, 5us=%d usÿPhyHwDrv.cÿ350ÿINIT_2P5G_PARAMETERÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00E6 02 XBZ PHYCTRL FSM INIT 0ÿPhyHwDrv.cÿ494ÿINIT_2P5G_PARAMETERÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00E7 02 DSP Code Download doneÿPhyHwDrv.cÿ517ÿINIT_2P5G_PARAMETERÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00E8 02 DSP_dm_cm_clear_debug_enÿPhyHwDrv.cÿ523ÿINIT_2P5G_PARAMETERÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00E9 02 Release DSP resetÿPhyHwDrv.cÿ711ÿINIT_2P5G_PARAMETERÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00EA 02 Release DSP reset disableÿPhyHwDrv.cÿ713ÿINIT_2P5G_PARAMETERÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00EB 02 PCW_NCPO = %xÿPhyHwDrv.cÿ1261ÿXBZMasterParameterÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00EC 02 ISR12 agc init = 0x%xÿPhyHwDrv.cÿ1273ÿXBZMasterParameterÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00ED 02 RX RCCAL Reload doneÿPhyHwDrv.cÿ1752ÿXBZCommonParameterÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00EE 02  *** RE_AN (INT12 Common) *** ,5us=%d usÿPhyHwDrv.cÿ2168ÿXBZCommonFlagÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00EF 02  aaaRCTRL(%d) tx_filt_c=%xÿPhyHwDrv.cÿ3955ÿPrint_AGC_Gainÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00F0 02  agc_p0=0x%x, agc_p1=0x%x, agc_p2=0x%x, agc_p3=0x%x ÿPhyHwDrv.cÿ3956ÿPrint_AGC_Gainÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00F1 02  tr_pf_p0=0x%x, tr_pf_p1=0x%x, tr_pf_p2=0x%x, tr_pf_p3=0x%x ÿPhyHwDrv.cÿ3964ÿPrint_AGC_Gainÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00F2 02 DSP_CODE_DOWNLOADÿPhyHwDrv.cÿ4606ÿDSP_CODE_DOWNLOADÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00F3 02 Release Coefficient memoryÿPhyHwDrv.cÿ4699ÿDSP_CODE_DOWNLOADÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00F4 02 DSP done, 5us=%d usÿPhyHwDrv.cÿ4700ÿDSP_CODE_DOWNLOADÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00F5 02 HWLA_DUMP_EQ, 5us=%d usÿPhyHwDrv.cÿ4973ÿHWLA_DUMP_EQÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00F6 02 MSG_FIELD WA DBG: FSM_pre[0x%2x] -> FSM_next[0x%2x], TimeStemp(uS) = %dÿPhyHwDrv.cÿ5332ÿBASET_FORCE_MSG_FIELD_State_Modifyÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00F7 02 MSG_FIELD WA: Wait Coeff_Exg_Done OK than force send 0x90ÿPhyHwDrv.cÿ5358ÿBASET_FORCE_MSG_FIELD_State_Actionÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00F8 02 EN-MSG_0x90ÿPhyHwDrv.cÿ5359ÿBASET_FORCE_MSG_FIELD_State_Actionÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00F9 02 MSG_FIELD WA: force send 0x90 OK than send 0x92ÿPhyHwDrv.cÿ5388ÿBASET_FORCE_MSG_FIELD_State_Actionÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00FA 02 MSG_FIELD SLV: FSM_pre[0x%2x] -> FSM_next[0x%2x], TimeStemp(uS) = %dÿPhyHwDrv.cÿ5627ÿBASET_FORCE_MSG_FIELD_State_Modify_SLVÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00FB 02 MSG_FIELD WA: Wait Coeff_Exg_Done OK than force send 0x90ÿPhyHwDrv.cÿ5670ÿBASET_FORCE_MSG_FIELD_State_Action_SLVÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00FC 02 EN-MSG_0x90ÿPhyHwDrv.cÿ5671ÿBASET_FORCE_MSG_FIELD_State_Action_SLVÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00FD 02 MSG_FIELD WA: force send 0x90 OK than send 0x92ÿPhyHwDrv.cÿ5700ÿBASET_FORCE_MSG_FIELD_State_Action_SLVÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00FE 02 MSG_FIELD dbg(1)  FSM = %dÿPhyHwDrv.cÿ5914ÿBASET_FORCE_MSG_FIELD_State_Modify_MSTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+00FF 02 MSG_FIELD dbg(2) AQR FSM = %dÿPhyHwDrv.cÿ5922ÿBASET_FORCE_MSG_FIELD_State_Modify_MSTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0100 02 MSG_FIELD dbg(3) FSM = %dÿPhyHwDrv.cÿ5930ÿBASET_FORCE_MSG_FIELD_State_Modify_MSTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0101 02 MSG_FIELD MST: FSM_pre[0x%2x] -> FSM_next[0x%2x], TimeStemp(uS) = %dÿPhyHwDrv.cÿ5970ÿBASET_FORCE_MSG_FIELD_State_Modify_MSTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0102 02 MSG_FIELD dbg  NextXmitSetIsNullCnt = %dÿPhyHwDrv.cÿ6010ÿBASET_FORCE_MSG_FIELD_State_Action_MSTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0103 02 HWLA_MONI_ADC_FSM DBG: FSM_pre[0x%2x] -> FSM_next[0x%2x], TimeStemp(ms) = %dÿPhyHwDrv.cÿ6143ÿBASET_HWLA_MONITOR_ADC_State_Modifyÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0104 02 Main Reset ... No Signal DetectÿPhyHwDrv.cÿ6202ÿBASET_HWLA_MONITOR_ADC_State_Actionÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0105 02  *** HWLA SELECT Pair %d, time=%dusÿPhyHwDrv.cÿ6856ÿHWLA_DUMP_SELECT_PAIRÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0106 02  <<< Enable HWLA Log TED_OUT >>> 5us = %dusÿPhyHwDrv.cÿ6890ÿHWLA_DUMP_TED_OUT_SET_123ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0107 02  ro_buffer_data_done -> OK ÿPhyHwDrv.cÿ6902ÿHWLA_DUMP_TED_OUTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0108 02 TED_out PairB %d %d %d Time=%dusÿPhyHwDrv.cÿ6917ÿHWLA_DUMP_TED_OUTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0109 02  ro_buffer_data_done -> False ÿPhyHwDrv.cÿ6921ÿHWLA_DUMP_TED_OUTÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+010A 02 ##### DEBUG HWLA_tr_le_coeff_tap_idx = %d ####ÿPhyHwDrv.cÿ7141ÿHWLA_DUMP_FORCE_CONFIG_LE_MAX_INDEXÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+010B 02 ##### DEBUG HWLA_tr_le_coeff = %d ####ÿPhyHwDrv.cÿ7142ÿHWLA_DUMP_FORCE_CONFIG_LE_MAX_INDEXÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+010C 02 # le_update_time_chk_A = %d #ÿPhyHwDrv.cÿ7166ÿLE_MAX_INDEX_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+010D 02 # LE_MAX_INDEX[%d] = %d #ÿPhyHwDrv.cÿ7192ÿLE_MAX_INDEX_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+010E 02 # LE_MAX_BITWISE = %d,  LE_MIN_BITWISE = %d #ÿPhyHwDrv.cÿ7212ÿLE_MAX_INDEX_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+010F 02 # mask_shift = %d #ÿPhyHwDrv.cÿ7233ÿLE_MAX_INDEX_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0110 02 # LE_BITWISE_MASK = 0x%x #ÿPhyHwDrv.cÿ7236ÿLE_MAX_INDEX_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0111 02 ******** LE LE_MAX_INDEX_FWWA DONE ********ÿPhyHwDrv.cÿ7261ÿLE_MAX_INDEX_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0112 02 ******** LE LE_MAX_INDEX_FWWA SELECT FAIL ********ÿPhyHwDrv.cÿ7265ÿLE_MAX_INDEX_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0113 02 *** TR_PF2DAGC_WAIT (1), time=%dus ***ÿPhyHwDrv.cÿ7293ÿTR_DDM2PF_RETRAIN_FWWA_v2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0114 02 *** TR_DDM_TRAIN_DAGC_DONE (2), time=%dus ***ÿPhyHwDrv.cÿ7311ÿTR_DDM2PF_RETRAIN_FWWA_v2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0115 02 *** TR_DDM_TRAIN_ALL_DONE (3), time=%dus ***ÿPhyHwDrv.cÿ7325ÿTR_DDM2PF_RETRAIN_FWWA_v2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0116 02 *** TR_DDM2PF_CONFIG (5), time=%dus ***ÿPhyHwDrv.cÿ7334ÿTR_DDM2PF_RETRAIN_FWWA_v2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0117 02 Freeze FBF, time=%dusÿPhyHwDrv.cÿ7344ÿTR_DDM2PF_RETRAIN_FWWA_v2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0118 02 Start PairB Sweep Up 0.5TÿPhyHwDrv.cÿ7373ÿTR_DDM2PF_RETRAIN_FWWA_v2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0119 02 Start PairB Sweep Down 1.0TÿPhyHwDrv.cÿ7383ÿTR_DDM2PF_RETRAIN_FWWA_v2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+011A 02 Start PairB Sweep Up 0.5TÿPhyHwDrv.cÿ7394ÿTR_DDM2PF_RETRAIN_FWWA_v2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+011B 02 *** AFIFO_FWWA_SWEEP_PAIRB ***, time=%dusÿPhyHwDrv.cÿ7430ÿTR_DDM2PF_RETRAIN_FWWA_v2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+011C 02 Release FBF, time=%dusÿPhyHwDrv.cÿ7455ÿTR_DDM2PF_RETRAIN_FWWA_v2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+011D 02 *** TR_DDM2PF_RETRAIN_FWWA SELECT FAIL ***ÿPhyHwDrv.cÿ7462ÿTR_DDM2PF_RETRAIN_FWWA_v2ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+011E 02  FWWA AGC_GAIN_CODE= %dÿPhyHwDrv.cÿ7491ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+011F 02 *** THP_EQ_INIT_MUX EQ state=%d ***ÿPhyHwDrv.cÿ7500ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0120 02  FWWA AGC_GAIN_CODE= %dÿPhyHwDrv.cÿ7510ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0121 02  FWWA_EQ_MAIN_TONE_VALUE ... %xÿPhyHwDrv.cÿ7516ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0122 02  FWWA_EQ_PRE_TONE_VALUE ... %xÿPhyHwDrv.cÿ7517ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0123 02 *** THP_EQ_INIT_MUX ***ÿPhyHwDrv.cÿ7524ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0124 02  FWWA AGC_GAIN_CODE= %dÿPhyHwDrv.cÿ7539ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0125 02 *** THP_EQ_INIT_MUX EQ state=%d ***ÿPhyHwDrv.cÿ7548ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0126 02  FWWA_EQ_MAIN_TONE_VALUE ... %xÿPhyHwDrv.cÿ7566ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0127 02  FWWA_EQ_PRE_TONE_VALUE ... %xÿPhyHwDrv.cÿ7567ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0128 02 *** THP_EQ_INIT_MUX ***ÿPhyHwDrv.cÿ7574ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+0129 02 *** THP_SCHE_FORCE ***ÿPhyHwDrv.cÿ7604ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+012A 02 *** THP_SCHE_RELEASE ***ÿPhyHwDrv.cÿ7613ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+012B 02 *** THP_FFE_UPD_RELEASE ***ÿPhyHwDrv.cÿ7632ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+012C 02 *** THP_INIT_DONE ***ÿPhyHwDrv.cÿ7639ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+012D 02 *** THP_EQ_INIT_FFF_FREEZE_FWWA SELECT FAIL ***ÿPhyHwDrv.cÿ7643ÿTHP_EQ_INIT_FFF_FREEZE_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/src
+012E 02 Int0 TED Cnt ... %d, 5us=%d usÿisr.cÿ62ÿHW_Interrupt0ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+012F 02  <<< TED_OUT Dump to DMEM >>> 5us = %dusÿisr.cÿ67ÿHW_Interrupt0ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0130 02 IRQ STS ini %8xÿisr.cÿ173ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0131 02 MSG_FIELD_LOG_RX, 31_00 = 0x%8x, 63_32 = 0x%8x, 95_64 = 0x%8x, 127_96 = 0x%8xÿisr.cÿ294ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0132 02 MSG_FIELD_LOG_TX, 31_00 = 0x%8x, 63_32 = 0x%8x, 95_64 = 0x%8x, 127_96 = 0x%8xÿisr.cÿ295ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0133 02 MSG_FIELD_LOG_RX, 31_00 = 0x%8x, 63_32 = 0x%8x, 95_64 = 0x%8x, 127_96 = 0x%8xÿisr.cÿ300ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0134 02 MSG_FIELD_LOG_TX, 31_00 = 0x%8x, 63_32 = 0x%8x, 95_64 = 0x%8x, 127_96 = 0x%8xÿisr.cÿ301ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0135 02 MSG_FIELD_LOG_RX, 31_00 = 0x%8x, 63_32 = 0x%8x, 95_64 = 0x%8x, 127_96 = 0x%8xÿisr.cÿ306ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0136 02 MSG_FIELD_LOG_TX, 31_00 = 0x%8x, 63_32 = 0x%8x, 95_64 = 0x%8x, 127_96 = 0x%8xÿisr.cÿ307ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0137 02 MSG_FIELD_LOG_RX, 31_00 = 0x%8x, 63_32 = 0x%8x, 95_64 = 0x%8x, 127_96 = 0x%8xÿisr.cÿ311ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0138 02 MSG_FIELD_LOG_TX, 31_00 = 0x%8x, 63_32 = 0x%8x, 95_64 = 0x%8x, 127_96 = 0x%8xÿisr.cÿ312ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0139 02 MSG_FIELD CRC, remote_info_field_31_00 = 0x%8xÿisr.cÿ338ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+013A 02 MSG_FIELD CRC, remote_info_field_63_32 = 0x%8xÿisr.cÿ340ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+013B 02 MSG_FIELD CRC, remote_info_field_95_64 = 0x%8xÿisr.cÿ342ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+013C 02 MSG_FIELD CRC, remote_info_field_127_96 = 0x%8xÿisr.cÿ344ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+013D 02  *** SILENT STATE MATCHED (FAST PASS PATH) ***, 5us=%d usÿisr.cÿ380ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+013E 02  *** RCTRL STATE MATCHED *** 5us=%d usÿisr.cÿ392ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+013F 02  *** PCS_RX_HI_LFER MATCHED *** time=%d us, 5us=%d usÿisr.cÿ401ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0140 02  ADC PairA=%x, pairB=%x, PairC=%x, pairD=%xÿisr.cÿ439ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0141 02  link_pcs_scr_status = %d, 5us=%d usÿisr.cÿ442ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0142 02 MSG_FIELD_CHG, 0x%8X, SFD = 0x%8x, TimeStemp(uS) = %d, [MSG_Field format, Pre_CNT[31:16], Now[15:8], Pre[7:0]]ÿisr.cÿ495ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0143 02 MSG_FIELD CHG, phyctrl_state = %dÿisr.cÿ498ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0144 02 SNR Monitor, Pair AB = 0x%8X, Pair CD = 0x%8X, TimeStemp(uS) = %dÿisr.cÿ503ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0145 02 TR KiBuf Monitor, Pair AB = 0x%8X, Pair CD = 0x%8X, TimeStemp(uS) = %dÿisr.cÿ504ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0146 02 DBG_MSG, INFO_MSG = %4x, COEF_EXCH = %4x, COEF_FILD_31_0 = %8x, Timer = %8dÿisr.cÿ581ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0147 02 MSG_FIELD in Coeff_exchange ÿisr.cÿ592ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0148 02 COEF_EXCH_PAIR:%d, COEF_EXCH_GROUP:%d,[0] --> %d, 5us=%d usÿisr.cÿ617ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0149 02 MSG_FIELD in trans_to_Fine_Adjust ÿisr.cÿ664ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+014A 02  *** THP_COEF_VLD happened! *** ÿisr.cÿ688ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+014B 02 Coeff FWWA Doneÿisr.cÿ692ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+014C 02 THP_COEFF_TX_A = %8X%8X%8X%8Xÿisr.cÿ703ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+014D 02 THP_COEFF_TX_B = %8X%8X%8X%8Xÿisr.cÿ704ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+014E 02 THP_COEFF_TX_C = %8X%8X%8X%8Xÿisr.cÿ705ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+014F 02 THP_COEFF_TX_D = %8X%8X%8X%8Xÿisr.cÿ706ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0150 02 THP_COEFF_RX_A = %8X%8X%8X%8Xÿisr.cÿ708ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0151 02 THP_COEFF_RX_B = %8X%8X%8X%8Xÿisr.cÿ709ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0152 02 THP_COEFF_RX_C = %8X%8X%8X%8Xÿisr.cÿ710ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0153 02 THP_COEFF_RX_D = %8X%8X%8X%8Xÿisr.cÿ711ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0154 02  polarity = (%d,%d,%d,%d)ÿisr.cÿ762ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0155 02 HW_ISR_5_ Issued!ÿisr.cÿ771ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0156 02 IRQ STS after %8xÿisr.cÿ786ÿHW_Interrupt4ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0157 02 IRQ STS ini %8xÿisr.cÿ865ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0158 02 IRQ STS after %8xÿisr.cÿ876ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0159 02 [rctrl= %d] ki_buf clear, %d ÿisr.cÿ1134ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+015A 02 [rctrl= %d] ki_buf clear, %d ÿisr.cÿ1139ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+015B 02 [rctrl= %d], time=%d ÿisr.cÿ1148ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+015C 02 SNRx5/5_LPF, %d, %d, %d, %dÿisr.cÿ1149ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+015D 02 ki_buf, %d, %d, %d, %dÿisr.cÿ1150ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+015E 02 SNRx5/5_LPF, %d, %d, %d, %dÿisr.cÿ1161ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+015F 02 ki_buf, %d, %d, %d, %dÿisr.cÿ1162ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0160 02 adc, %d, %d, %d, %dÿisr.cÿ1163ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0161 02 ki_buf clear, %d ÿisr.cÿ1164ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0162 02  PHYCTRL(%d --> %d), time=%d us, 5us=%d usÿisr.cÿ1447ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0163 02 ted_gear_dbg= %d ÿisr.cÿ1662ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0164 02 ted_gear_dbg= %d ÿisr.cÿ1683ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0165 02  *** PCS_DATA clear NCO buffer ***, 5us=%d usÿisr.cÿ1754ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0166 02  *** TED Offset = %x, SNR=%d, time=%d usÿisr.cÿ1838ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0167 02  ***** Master: RCTRL FAST PASS DETECT (42 --> %d), 5us time = %d *****ÿisr.cÿ1965ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0168 02  ***** Slave: RCTRL FAST PASS DETECT (42 --> %d), 5us time = %d *****ÿisr.cÿ1969ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0169 02  RCTRL(%d --> %d), time=%d us, snr=%dÿisr.cÿ1976ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+016A 02            Link 5us time= %d usÿisr.cÿ1979ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+016B 02  RCTRL(%d --> %d) agc(0x%x) time=%d *5nsÿisr.cÿ1984ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+016C 02 SNRx1Rec, %d, %d, %d, %dÿisr.cÿ1985ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+016D 02 Before PairB Sweep, Tick=%dÿisr.cÿ2120ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+016E 02 After PairB Sweep, Tick=%dÿisr.cÿ2123ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+016F 02  RCTRL(%d), time=%dÿisr.cÿ2147ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0170 02 *** tr_ted_offset = 5 ***, time=%dusÿisr.cÿ2169ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0171 02 SNRx5/5_LPF_41, %d, %d, %d, %dÿisr.cÿ2364ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0172 02 aaaRctrl_42, gain_com(%d), tr_kp(0x%x), tr_ki(0x%x), tx_gain_up(%d) ÿisr.cÿ2392ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0173 02 aaaRctrl_42, dfe(0x%x, 0x%x, 0x%x, 0x%x) ÿisr.cÿ2398ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0174 02 aaaRctrl_42, ffe(0x%x, 0x%x) lock(0x%x, 0x%x) ÿisr.cÿ2404ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0175 02 aaaRctrl_42, ERR_POW_ABCD = 0x%4X, 0x%4X, 0x%4X, 0x%4Xÿisr.cÿ2406ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0176 02 agc_clip_42, %d, %d, %d, %dÿisr.cÿ2414ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0177 02  Increase ted offset one step @ time = %dÿisr.cÿ2511ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0178 02  frz tr ÿisr.cÿ2548ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0179 02  frz FFE, time=%dusÿisr.cÿ2581ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+017A 02  frz FBF, time=%dusÿisr.cÿ2602ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+017B 02  frz FDC, time=%dusÿisr.cÿ2627ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+017C 02  frz tr ÿisr.cÿ2648ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+017D 02  frz FFE ÿisr.cÿ2699ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+017E 02  frz FBF ÿisr.cÿ2719ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+017F 02  frz FDC ÿisr.cÿ2736ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0180 02  release frz tr ÿisr.cÿ2775ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0181 02  release frz tr ÿisr.cÿ2805ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0182 02  release frz PBO FFE ÿisr.cÿ2834ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0183 02  release frz THP FFE ÿisr.cÿ2870ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0184 02  release frz PBO FBF ÿisr.cÿ2925ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0185 02  release frz THP FBF ÿisr.cÿ2977ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0186 02  filter error mode  ÿisr.cÿ2986ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0187 02  release frz FDC ÿisr.cÿ3030ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0188 02  update final THP SS ÿisr.cÿ3045ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0189 02 pre-THP count down=%d, (%d), time=%d usÿisr.cÿ3110ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+018A 02 DBG_READ_IDX resetÿisr.cÿ3135ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+018B 02  FW DUMP END ÿisr.cÿ3144ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+018C 02  *** FWLA DATA MODE DUMP FULL! reset index***ÿisr.cÿ3192ÿHW_Interrupt5ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+018D 02 HW_ISR_6_ Issued!ÿisr.cÿ3226ÿHW_Interrupt6ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+018E 02 IRQ STS ini %8xÿisr.cÿ3234ÿHW_Interrupt6ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+018F 02 IRQ STS after %8xÿisr.cÿ3245ÿHW_Interrupt6ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0190 02  irq_xbz_tx_afifo_a_full, time = %dusÿisr.cÿ3280ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0191 02  irq_xbz_tx_afifo_b_full, time = %dusÿisr.cÿ3285ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0192 02  irq_xbz_tx_afifo_c_full, time = %dusÿisr.cÿ3290ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0193 02  irq_xbz_tx_afifo_d_full, time = %dusÿisr.cÿ3295ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0194 02  irq_xbz_tx_afifo_a_empty, time = %dusÿisr.cÿ3301ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0195 02  irq_xbz_tx_afifo_b_empty, time = %dusÿisr.cÿ3306ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0196 02  irq_xbz_tx_afifo_c_empty, time = %dusÿisr.cÿ3311ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0197 02  irq_xbz_tx_afifo_d_empty, time = %dusÿisr.cÿ3316ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0198 02  irq_xbz_rx_afifo_a_full, time = %dus, Sweep Cnt=%dÿisr.cÿ3323ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0199 02  irq_xbz_rx_afifo_b_full, time = %dus, Sweep Cnt=%dÿisr.cÿ3329ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+019A 02  irq_xbz_rx_afifo_c_full, time = %dus, Sweep Cnt=%dÿisr.cÿ3335ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+019B 02  irq_xbz_rx_afifo_d_full, time = %dus, Sweep Cnt=%dÿisr.cÿ3341ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+019C 02  irq_xbz_rx_afifo_a_empty, time = %dus, Sweep Cnt=%dÿisr.cÿ3348ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+019D 02  irq_xbz_rx_afifo_b_empty, time = %dus, Sweep Cnt=%dÿisr.cÿ3354ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+019E 02  irq_xbz_rx_afifo_c_empty, time = %dus, Sweep Cnt=%dÿisr.cÿ3360ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+019F 02  irq_xbz_rx_afifo_d_empty, time = %dus, Sweep Cnt=%dÿisr.cÿ3366ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01A0 02 HW_ISR_7_ Issued!ÿisr.cÿ3384ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01A1 02 IRQ STS ini %8xÿisr.cÿ3390ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01A2 02 IRQ STS after %8xÿisr.cÿ3401ÿHW_Interrupt7ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01A3 02 Int8 REG00 WRENÿisr.cÿ3447ÿHW_Interrupt8ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01A4 02 Main Reset Detect, 0x%8xÿisr.cÿ3462ÿHW_Interrupt8ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01A5 02 IRQ STS ini %8xÿisr.cÿ3503ÿHW_Interrupt8ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01A6 02 IRQ STS after %8xÿisr.cÿ3514ÿHW_Interrupt8ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01A7 02 IRQ STS ini %8xÿisr.cÿ3550ÿHW_Interrupt9ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01A8 02 IRQ STS after %8xÿisr.cÿ3561ÿHW_Interrupt9ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01A9 02 TIMER_DONE - Link Fail, COEFF_EXCH_TX_UNFINISHÿisr.cÿ3567ÿHW_Interrupt9ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01AA 02 TIMER_DONE - Link Fail, Force Master at next ANÿisr.cÿ3570ÿHW_Interrupt9ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01AB 02 TIMER_DONE - MsgField_0X90ÿisr.cÿ3582ÿHW_Interrupt9ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01AC 02 HW_ISR_10_TMR_COUNTER_1ms, startÿisr.cÿ3622ÿHW_Interrupt10ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01AD 02 IRQ STS ini %8xÿisr.cÿ3629ÿHW_Interrupt10ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01AE 02 IRQ STS after %8xÿisr.cÿ3639ÿHW_Interrupt10ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01AF 02 TMR_1ms, Counter = 0x%d ms, Link = 0x%dÿisr.cÿ3661ÿHW_Interrupt10ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01B0 02 LINK_Status OK, Int10 Close, bypass_lfer=%d, ldpc_err=%dÿisr.cÿ3672ÿHW_Interrupt10ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01B1 02 agc_clip_1ms, %d, %d, %d, %dÿisr.cÿ3724ÿHW_Interrupt10ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01B2 02 ki_buf_1ms, %d, %d, %d, %dÿisr.cÿ3732ÿHW_Interrupt10ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01B3 02 adc_1ms, %d, %d, %d, %dÿisr.cÿ3741ÿHW_Interrupt10ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01B4 02 TMR_0.5ms, Counter = 0x%d ms, Link = 0x%d (%d), err(%d)ÿisr.cÿ3743ÿHW_Interrupt10ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01B5 02 SNRx5/5Rec, %d, %d, %d, %dÿisr.cÿ3744ÿHW_Interrupt10ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01B6 02 LINK_Status Fail, Counter = 0x%dÿisr.cÿ3754ÿHW_Interrupt10ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01B7 02 LINK_Status Fail, BackUp = 0x%dÿisr.cÿ3767ÿHW_Interrupt10ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01B8 02 ISR12, 7_20=0x%x, 7_21=0x%xÿisr.cÿ3865ÿHW_Interrupt12ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01B9 02 ISR12, 7_20=0x%x, 7_21=0x%xÿisr.cÿ3871ÿHW_Interrupt12ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01BA 02 Int12(), RO_SPEED(0x1020c): %x, 1e_a2=0x%xÿisr.cÿ3878ÿHW_Interrupt12ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01BB 02 IRQ STS ini %8xÿisr.cÿ3951ÿHW_Interrupt12ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01BC 02 IRQ STS after %8xÿisr.cÿ3962ÿHW_Interrupt12ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01BD 02  MASTER mode, 5us=%d usÿisr.cÿ4029ÿHW_Interrupt12ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01BE 02  SLAVE mode, 5us=%d usÿisr.cÿ4035ÿHW_Interrupt12ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01BF 02 txvldÿisr.cÿ4098ÿHW_Interrupt12ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01C0 02 IRQ STS ini %8xÿisr.cÿ4129ÿHW_Interrupt13ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01C1 02 IRQ STS after %8xÿisr.cÿ4140ÿHW_Interrupt13ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01C2 02 LOAD_HCD - Disable Force Master FWWA, recovery to original MSconfigÿisr.cÿ4146ÿHW_Interrupt13ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01C3 02 load HCD, 7_20=0x%x, 7_21=0x%xÿisr.cÿ4165ÿHW_Interrupt13ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01C4 02 load HCD, 7_20=0x%x, 7_21=0x%xÿisr.cÿ4171ÿHW_Interrupt13ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01C5 02 load HCD, 1e_a2=0x%x, ext_13=0x%x, ext_14=0x%x, nbaseT_dwnshift_en=0x%xÿisr.cÿ4186ÿHW_Interrupt13ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01C6 02  reg_4=0x%x, reg_5=0x%x, reg_9=0x%x, reg_a=0x%xÿisr.cÿ4187ÿHW_Interrupt13ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01C7 02 load HCD, monitor_cnt=%d, reANÿisr.cÿ4195ÿHW_Interrupt13ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01C8 02 load HCD, monitor_cnt=%dÿisr.cÿ4201ÿHW_Interrupt13ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01C9 02 MSConfig Fault, cnt(%d), release, seed(0x%x)ÿisr.cÿ4251ÿHW_Interrupt13ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01CA 02 IRQ STS ini %8xÿisr.cÿ4279ÿHW_Interrupt14ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01CB 02 IRQ STS after %8xÿisr.cÿ4290ÿHW_Interrupt14ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01CC 02 First Messageÿmain.cÿ139ÿmainÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01CD 02 fgLineSide_Mute_Flag startÿmain.cÿ264ÿmainÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01CE 02 Enter power downÿtask.cÿ24ÿWaitTaskReadyÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01CF 02 Out power downÿtask.cÿ32ÿWaitTaskReadyÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01D0 02 Entering TaskSchedilerÿtask.cÿ185ÿTaskSchedulerÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01D1 02 TaskSchediler HostCMD_Invokedÿtask.cÿ305ÿTaskSchedulerÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01D2 02 fg2p5g_while_one_polling (1), %d ÿtask.cÿ458ÿTaskSchedulerÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01D3 02 fg2p5g_while_one_polling (0), %d ÿtask.cÿ464ÿTaskSchedulerÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01D4 02 No Signal Detectÿtask.cÿ486ÿTaskSchedulerÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01D5 02 Main Reset ... No Signal Detectÿtask.cÿ499ÿTaskSchedulerÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01D6 02 ****Special_case****%d, while(1)..%dÿtask.cÿ553ÿTaskSchedulerÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01D7 02 ******** EN1G ******** Whileÿtask.cÿ573ÿTaskSchedulerÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01D8 02 ****Special_case_clearÿtask.cÿ586ÿTaskSchedulerÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01D9 02 Task_HSTCMD beginÿtask.cÿ727ÿTask_HSTCMDÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01DA 02 Task_HSTCMD endÿtask.cÿ732ÿTask_HSTCMDÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01DB 02 fgSysSide_First_Power_On_Setting_Done_Flag=1 (0) ÿtask.cÿ778ÿPhyTaskControl_SSÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01DC 02 RX_SYNC=1, LineSide_Mute_Flag=DISABLE, Power Up txvld_a & bÿtask.cÿ796ÿPhyTaskControl_SSÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01DD 02 RX_SYNC=0, LineSide_Mute_Flag=TRUEÿtask.cÿ810ÿPhyTaskControl_SSÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01DE 02 fgSysSide_Mute_Flag=0 (zzz) ÿtask.cÿ824ÿPhyTaskControl_SSÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01DF 02 FWWA EEE init(on)ÿtask.cÿ839ÿFIFO_Ini_Settingÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01E0 02 FWWA EEE init(off)ÿtask.cÿ850ÿFIFO_Ini_Settingÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01E1 02 FWWA FIFO initÿtask.cÿ880ÿFIFO_Ini_Settingÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01E2 02 Cancel 2.5G cap due to AN Hang stage 5ÿtask.cÿ916ÿAN_state_0x5_checkÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01E3 02 DBG_RX_SYNC_STAGE:%d, time=%dus, SS_LinkSts = Trueÿtask.cÿ966ÿSYSTEM_SIDE_LINK_STATUS_CHECKÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01E4 02 LS & SS Both Link Up!, While(1)=%dÿtask.cÿ1058ÿFCM_LS_RST_MONITORÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01E5 02 LS or SS Link Down! HOLD MAC & FCM Resetÿtask.cÿ1081ÿFCM_LS_RST_MONITORÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01E6 02 ASIX MAC SFR SET DONEÿtask.cÿ1121ÿFCM_LS_RST_MONITORÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01E7 02 Release FCM Reset, time=%dusÿtask.cÿ1125ÿFCM_LS_RST_MONITORÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01E8 02 Release FCM Reset, time=%dusÿtask.cÿ1171ÿFCM_LS_RST_MONITORÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01E9 02 FCM PAUSE FRAME DETECTED!!ÿtask.cÿ1284ÿFCM_PAUSE_FRAME_DETECT_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01EA 02 FCM PAUSE FRAME FWWA ACTIONÿtask.cÿ1300ÿFCM_PAUSE_FRAME_DETECT_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01EB 02 FCM PAUSE FRAME FWWA -- NO ACTION!!ÿtask.cÿ1307ÿFCM_PAUSE_FRAME_DETECT_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01EC 02 ASIX MAC HANG DETECTED!!ÿtask.cÿ1348ÿASIX_MAC_HANG_DETECT_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01ED 02 ASIX MAC HANG FWWA ACTIONÿtask.cÿ1364ÿASIX_MAC_HANG_DETECT_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01EE 02 ASIX MAC HANG FWWA -- NO ACTION!!ÿtask.cÿ1371ÿASIX_MAC_HANG_DETECT_FWWAÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01EF 02 DwnShift_1G_Fail_MatchCnt:%d, while(1)=%dÿtask.cÿ1397ÿFWWA_DOWNSHIFT_1G_FAIL_FUNC1ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01F0 02 DwnShift_1G_Fail_MatchCnt:%d, while(1)=%dÿtask.cÿ1414ÿFWWA_DOWNSHIFT_1G_FAIL_FUNC1ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01F1 02 Disable XNP & 1000M FDX Capabilityÿtask.cÿ1431ÿFWWA_DOWNSHIFT_1G_FAIL_FUNC1ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01F2 02 Recover XNP & 1000FDX Capabilityÿtask.cÿ1441ÿFWWA_DOWNSHIFT_1G_FAIL_FUNC1ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01F3 02 ****fg2p5gtwopairCnt****%d, while(1)=%dÿtask.cÿ1486ÿFWWA_DOWNSHIFT_1G_FAIL_FUNCÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01F4 02 LP_OUI: CISCO(00-04-28)ÿtask.cÿ1534ÿAN_LP_OUI_ADV_UPDATEÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01F5 02 LP_OUI: AQ(00-17-B6)ÿtask.cÿ1539ÿAN_LP_OUI_ADV_UPDATEÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01F6 02 LP_OUI: NBASE_T(FA-07-3E)ÿtask.cÿ1544ÿAN_LP_OUI_ADV_UPDATEÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01F7 02 LP_OUI: INTEL(98-4F-EE)ÿtask.cÿ1549ÿAN_LP_OUI_ADV_UPDATEÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01F8 02 LP_OUI: MTK(00-0C-E7)ÿtask.cÿ1554ÿAN_LP_OUI_ADV_UPDATEÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01F9 02 LP_OUI: AIROHA(0C-FC-83)ÿtask.cÿ1559ÿAN_LP_OUI_ADV_UPDATEÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01FA 02 LP_OUI: AIROHA(Twopair mode On)ÿtask.cÿ1564ÿAN_LP_OUI_ADV_UPDATEÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01FB 02 LP_OUI: AIROHA(Twopair mode Off)ÿtask.cÿ1570ÿAN_LP_OUI_ADV_UPDATEÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01FC 02 LP_OUI: unknown(0x%x)ÿtask.cÿ1576ÿAN_LP_OUI_ADV_UPDATEÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01FD 02 AN hang(2p5G)(state=5)=>reANÿtask.cÿ1617ÿAN_hang_check_2p5Gÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01FE 02 AN hang(100M)(state=5)=>reANÿtask.cÿ1650ÿAN_hang_check_100Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+01FF 02 AN abnormal(100M)(EEE)(no NP)=>reANÿtask.cÿ1669ÿAN_hang_check_100Mÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0200 02 Run BackupCL22ÿtask.cÿ1685ÿBackupCL22ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0201 02 Run RecoverCL22ÿtask.cÿ1718ÿRecoverCL22ÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0202 02 DMEM_BUF_BASE_ADDR != 0, 0x3000 = 0x%xÿtask.cÿ1759ÿFWSelfCheckÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0203 02 DMEM_RSV_1_ADDR != 0, 0x3800 = 0x%xÿtask.cÿ1763ÿFWSelfCheckÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0204 02 INFODBG32_ADDR != 0, 0x3900 = 0x%xÿtask.cÿ1767ÿFWSelfCheckÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0205 02 LINKDBG32_ADDR != 0, 0x3A00 = 0x%xÿtask.cÿ1771ÿFWSelfCheckÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0206 02 TOPDBG32_ADDR != 0, 0x3B20 = 0x%xÿtask.cÿ1775ÿFWSelfCheckÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top
+0207 02 DBG_BUF_BASE_ADDR != 0, 0x3E00 = 0x%xÿtask.cÿ1779ÿFWSelfCheckÿ00ÿdir:/proj/ar701130/Git/EN8811/8811_240823_01_Git/md32_firmware/top

@@ -1,0 +1,21 @@
+--- a/src/ap/wpa_auth_ie.c
++++ b/src/ap/wpa_auth_ie.c
+@@ -872,6 +872,7 @@ wpa_validate_wpa_ie(struct wpa_authentic
+ 	}
+ 
+ #ifdef CONFIG_IEEE80211R_AP
++    /* If FT is not supported, don't worry about whether there are mdie fields */
+ 	if (wpa_key_mgmt_ft(sm->wpa_key_mgmt)) {
+ 		if (mdie == NULL || mdie_len < MOBILITY_DOMAIN_ID_LEN + 1) {
+ 			wpa_printf(MSG_DEBUG, "RSN: Trying to use FT, but "
+@@ -884,10 +885,6 @@ wpa_validate_wpa_ie(struct wpa_authentic
+ 				    "MDIE", mdie, MOBILITY_DOMAIN_ID_LEN);
+ 			return WPA_INVALID_MDIE;
+ 		}
+-	} else if (mdie != NULL) {
+-		wpa_printf(MSG_DEBUG,
+-			   "RSN: Trying to use non-FT AKM suite, but MDIE included");
+-		return WPA_INVALID_AKMP;
+ 	}
+ #endif /* CONFIG_IEEE80211R_AP */
+ 

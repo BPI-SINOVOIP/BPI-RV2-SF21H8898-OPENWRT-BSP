@@ -1,0 +1,88 @@
+--- a/hostapd/config_file.c
++++ b/hostapd/config_file.c
+@@ -3437,6 +3437,8 @@ static int hostapd_config_fill(struct ho
+ 			conf->preamble = SHORT_PREAMBLE;
+ 		else
+ 			conf->preamble = LONG_PREAMBLE;
++	} else if (os_strcmp(buf, "band_steering") == 0) {
++		bss->band_steering = atoi(pos);
+ 	} else if (os_strcmp(buf, "ignore_broadcast_ssid") == 0) {
+ 		bss->ignore_broadcast_ssid = atoi(pos);
+ 	} else if (os_strcmp(buf, "conditionally_ignore_bcast_ssid") == 0) {
+--- a/src/ap/ap_config.h
++++ b/src/ap/ap_config.h
+@@ -466,6 +466,8 @@ struct hostapd_bss_config {
+ 	int wmm_enabled;
+ 	int wmm_uapsd;
+ 
++	int band_steering;
++
+ 	struct hostapd_vlan *vlan;
+ 
+ 	macaddr bssid;
+--- a/src/ap/ubus.c
++++ b/src/ap/ubus.c
+@@ -2131,6 +2131,17 @@ static void wifi_ap_probe_req_cb(struct
+ 	*(int *)req->priv = blobmsg_get_u32(tb[0]);
+ }
+ 
++static void wifi_recevie_assoc_cb(struct ubus_request *req, int type, struct blob_attr *msg)
++{
++    struct blob_attr *tb[1];
++    const struct blobmsg_policy recevie_assoc_policy[] = {
++        { .name = "result", .type = BLOBMSG_TYPE_INT32 },
++    };
++
++    blobmsg_parse(recevie_assoc_policy, ARRAY_SIZE(recevie_assoc_policy), tb, blob_data(msg), blob_len(msg));
++
++    *(int *)req->priv = blobmsg_get_u32(tb[0]);
++}
+ 
+ int hostapd_ubus_handle_event(struct hostapd_data *hapd, struct hostapd_ubus_request *req)
+ {
+@@ -2143,7 +2154,7 @@ int hostapd_ubus_handle_event(struct hos
+ 	const char *type = "mgmt";
+ 	struct ubus_event_req ureq = {};
+ 	const u8 *addr;
+-	int ret = 0;
++	int ret = 0, auth_ret, sf_band_steering_id;
+ 
+ 	if (req->mgmt_frame)
+ 		addr = req->mgmt_frame->sa;
+@@ -2202,6 +2213,27 @@ int hostapd_ubus_handle_event(struct hos
+ 		}
+ 	}
+ 
++    if (hapd->conf->band_steering && (req->type == HOSTAPD_UBUS_PROBE_REQ || (req->type == HOSTAPD_UBUS_ASSOC_REQ))) {
++        if (ctx && !ubus_lookup_id(ctx, "sf_band_steering", &sf_band_steering_id)) {
++            if (req->type == HOSTAPD_UBUS_PROBE_REQ) {
++                blob_buf_init(&b, 0);
++                blobmsg_add_macaddr(&b, "sta_mac", addr);
++                blobmsg_add_u32(&b, "channel", hapd->iconf->channel);
++                blobmsg_add_u32(&b, "obj_id", (&hapd->ubus.obj)->id);
++                blobmsg_add_u32(&b, "rssi", req->ssi_signal);
++                ubus_invoke(ctx, sf_band_steering_id,
++                        "wifi_recevie_probe_req", b.head, NULL, 0, 1000);
++            } else {
++                blob_buf_init(&b, 0);
++                blobmsg_add_macaddr(&b, "sta_mac", addr);
++                blobmsg_add_u32(&b, "channel", hapd->iconf->channel);
++                blobmsg_add_u32(&b, "rssi", req->ssi_signal);
++                ubus_invoke(ctx, sf_band_steering_id,
++                        "wifi_recevie_assoc", b.head, wifi_recevie_assoc_cb, &auth_ret, 1000);
++            }
++        }
++    }
++
+ 	if (!hapd->ubus.obj.has_subscribers)
+ 		goto out;
+ 
+@@ -2271,6 +2303,8 @@ int hostapd_ubus_handle_event(struct hos
+ 	if (ureq.resp)
+ 		return ureq.resp;
+ out:
++    if (hapd->conf->band_steering && req->type == HOSTAPD_UBUS_ASSOC_REQ)
++        return auth_ret;
+ 	if (hapd->conf->conditionally_ignore_bcast_ssid)
+ 		return ret;
+ 

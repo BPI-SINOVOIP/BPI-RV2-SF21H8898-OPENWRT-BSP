@@ -1,0 +1,46 @@
+Index: hostapd-2022-01-16-cff80b4f/src/common/hw_features_common.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/common/hw_features_common.c
++++ hostapd-2022-01-16-cff80b4f/src/common/hw_features_common.c
+@@ -300,6 +300,8 @@ int check_40mhz_2g4(struct hostapd_hw_mo
+ 	int pri_freq, sec_freq;
+ 	int affected_start, affected_end;
+ 	size_t i;
++	int count_20mhz_bss = 0;
++	int count_40mhz_bss = 0;
+ 
+ 	if (!mode || !scan_res || !pri_chan || !sec_chan ||
+ 	    pri_chan == sec_chan)
+@@ -318,12 +320,19 @@ int check_40mhz_2g4(struct hostapd_hw_mo
+ 		int sec = pri;
+ 		struct ieee802_11_elems elems;
+ 
++		/* Ignore BSS which satisfies condition: Signal < -75 dBm */
++		if (bss->level < -75)
++			continue;
++
+ 		/* Check for overlapping 20 MHz BSS */
+ 		if (check_20mhz_bss(bss, pri_freq, affected_start,
+ 				    affected_end)) {
+ 			wpa_printf(MSG_DEBUG,
+ 				   "Overlapping 20 MHz BSS is found");
+-			return 0;
++			count_20mhz_bss ++;
++			/* Set max count of 20mhz overlapping BSS to be 6(can be changed). MAX_COUNT_20MHZ_BSS = 6. */
++			if (count_20mhz_bss >= 6)
++				return 0;
+ 		}
+ 
+ 		get_pri_sec_chan(bss, &pri_chan, &sec_chan);
+@@ -353,7 +362,10 @@ int check_40mhz_2g4(struct hostapd_hw_mo
+ 					   pri, sec, pri_chan,
+ 					   sec > pri ? '+' : '-',
+ 					   pri_freq, sec_freq);
+-				return 0;
++				count_40mhz_bss ++;
++				/* Set max count of 40MHz overlapping BSS to be 6(can be changed). MAX_COUNT_40MHZ_BSS = 6. */
++				if (count_40mhz_bss >= 6)
++					return 0;
+ 			}
+ 		}
+ 

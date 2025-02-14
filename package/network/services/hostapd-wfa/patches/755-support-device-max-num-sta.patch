@@ -1,0 +1,102 @@
+Index: hostapd-2022-01-16-cff80b4f/hostapd/config_file.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/hostapd/config_file.c
++++ hostapd-2022-01-16-cff80b4f/hostapd/config_file.c
+@@ -2466,6 +2466,8 @@ static int hostapd_config_fill(struct ho
+ 		bss->config_id = os_strdup(pos);
+ 	} else if (os_strcmp(buf, "skip_inactivity_poll") == 0) {
+ 		bss->skip_inactivity_poll = atoi(pos);
++	} else if (os_strcmp(buf, "max_num_sta") == 0) {
++		conf->max_num_sta = atoi(pos);
+ 	} else if (os_strcmp(buf, "country_code") == 0) {
+ 		if (pos[0] < 'A' || pos[0] > 'Z' ||
+ 		    pos[1] < 'A' || pos[1] > 'Z') {
+Index: hostapd-2022-01-16-cff80b4f/src/ap/ap_config.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/ap_config.c
++++ hostapd-2022-01-16-cff80b4f/src/ap/ap_config.c
+@@ -228,6 +228,7 @@ struct hostapd_config * hostapd_config_d
+ 	hostapd_config_defaults_bss(bss);
+ 
+ 	conf->num_bss = 1;
++	conf->max_num_sta = MAX_STA_COUNT;
+ 
+ 	conf->beacon_int = 100;
+ 	conf->rts_threshold = -2; /* use driver default: 2347 */
+Index: hostapd-2022-01-16-cff80b4f/src/ap/ap_config.h
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/ap_config.h
++++ hostapd-2022-01-16-cff80b4f/src/ap/ap_config.h
+@@ -983,7 +983,7 @@ struct hostapd_config {
+ 	unsigned int track_sta_max_num;
+ 	unsigned int track_sta_max_age;
+ 
+-	int max_num_sta;
++	int max_num_sta;/*  to limit the linked stations number */
+ 
+ 	char country[3]; /* first two octets: country code as described in
+ 			  * ISO/IEC 3166-1. Third octet:
+Index: hostapd-2022-01-16-cff80b4f/src/ap/beacon.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/beacon.c
++++ hostapd-2022-01-16-cff80b4f/src/ap/beacon.c
+@@ -1068,7 +1068,9 @@ void handle_probe_req(struct hostapd_dat
+ 	if (hapd->conf->no_probe_resp_if_max_sta &&
+ 	    is_multicast_ether_addr(mgmt->da) &&
+ 	    is_multicast_ether_addr(mgmt->bssid) &&
+-	    hostapd_check_max_sta(hapd) &&
++	    (hapd->num_sta >= hapd->conf->max_num_sta ||
++	     hapd->iface->all_num_sta >= hapd->iconf->max_num_sta)&&
++//	    hostapd_check_max_sta(hapd) &&
+ 	    !ap_get_sta(hapd, mgmt->sa)) {
+ 		wpa_printf(MSG_MSGDUMP, "%s: Ignore Probe Request from " MACSTR
+ 			   " since no room for additional STA",
+Index: hostapd-2022-01-16-cff80b4f/src/ap/hostapd.h
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/hostapd.h
++++ hostapd-2022-01-16-cff80b4f/src/ap/hostapd.h
+@@ -543,6 +543,8 @@ struct hostapd_iface {
+ 
+ 	u16 hw_flags;
+ 
++	int all_num_sta;
++
+ 	/* Number of associated Non-ERP stations (i.e., stations using 802.11b
+ 	 * in 802.11g BSS) */
+ 	int num_sta_non_erp;
+Index: hostapd-2022-01-16-cff80b4f/src/ap/sta_info.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/sta_info.c
++++ hostapd-2022-01-16-cff80b4f/src/ap/sta_info.c
+@@ -218,6 +218,7 @@ void ap_free_sta(struct hostapd_data *ha
+ 			~BIT((sta->aid - 1) % 32);
+ 
+ 	hapd->num_sta--;
++	hapd->iface->all_num_sta--;
+ 	if (sta->nonerp_set) {
+ 		sta->nonerp_set = 0;
+ 		hapd->iface->num_sta_non_erp--;
+@@ -756,10 +757,12 @@ struct sta_info * ap_sta_add(struct host
+ 		return sta;
+ 
+ 	wpa_printf(MSG_DEBUG, "  New STA");
+-	if (hapd->num_sta >= hapd->conf->max_num_sta) {
++	if (hapd->num_sta >= hapd->conf->max_num_sta ||
++				hapd->iface->all_num_sta >= hapd->iconf->max_num_sta) {
+ 		/* FIX: might try to remove some old STAs first? */
+-		wpa_printf(MSG_DEBUG, "no more room for new STAs (%d/%d)",
+-			   hapd->num_sta, hapd->conf->max_num_sta);
++		wpa_printf(MSG_DEBUG, "no more room for new STAs (%d/%d), (%d/%d)",
++			   hapd->num_sta, hapd->conf->max_num_sta,
++			   hapd->iface->all_num_sta, hapd->iconf->max_num_sta);
+ 		return NULL;
+ 	}
+ 
+@@ -800,6 +803,7 @@ struct sta_info * ap_sta_add(struct host
+ 	sta->next = hapd->sta_list;
+ 	hapd->sta_list = sta;
+ 	hapd->num_sta++;
++	hapd->iface->all_num_sta++;
+ 	ap_sta_hash_add(hapd, sta);
+ 	ap_sta_remove_in_other_bss(hapd, sta);
+ 	sta->last_seq_ctrl = WLAN_INVALID_MGMT_SEQ;

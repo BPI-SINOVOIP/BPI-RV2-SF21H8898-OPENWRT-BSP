@@ -1,0 +1,17 @@
+Index: netifd-2022-02-20-136006b8/interface.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/interface.c
++++ netifd-2022-02-20-136006b8/interface.c
+@@ -1301,11 +1301,10 @@ interface_change_config(struct interface
+ 	if (if_old->config_autostart != if_new->config_autostart) {
+ 		if (if_old->config_autostart)
+ 			reload = true;
+-
+-		if_old->autostart = if_new->config_autostart;
+ 	}
+ 
+ 	if_old->device_config = if_new->device_config;
++	if_old->autostart = if_new->autostart;
+ 	if_old->config_autostart = if_new->config_autostart;
+ 	if (if_old->jail)
+ 		free(if_old->jail);

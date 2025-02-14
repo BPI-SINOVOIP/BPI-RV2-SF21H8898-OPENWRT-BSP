@@ -1,0 +1,160 @@
+mainmenu "YT switch sdk configuration"
+
+choice
+	prompt "Select the OS you want to run"
+	help
+		(e.g. : OS_Cyg/OS_Linux/OS_FreeRTOS)
+		You can modify it in menuconfig scripts when we have other depot.
+
+	default OS_Cyg
+
+	config OS_Cyg
+		bool "OS_Cyg"
+		
+	config OS_Linux
+		bool "OS_Linux"
+		
+	config OS_FreeRTOS
+		bool "OS_FreeRTOS"
+endchoice
+
+choice
+	depends on  OS_Linux
+	prompt "Select the compilation mode for linux"
+	help
+		(e.g. : User_Mode/Kernel_Module/Kernel_BuildIn)
+		You can modify it in menuconfig scripts when we have other depot.
+
+	default User_Mode
+
+	config User_Mode
+		bool "User_Mode"
+		
+	config Kernel_Mode
+		bool "Kernel_Mode"	
+endchoice
+		
+menu "Toolchain configuration"	
+	config TOOLCHAIN_PATH
+		string "TOOLCHAIN_PATH"
+		help
+			Toolchain path
+
+	config CROSS_COMPILE
+		string "CROSS_COMPILE"
+		help
+			Cross compile prefix
+
+	config CPU_ARCH
+		depends on Kernel_Mode
+		string "CPU_ARCH"
+		help
+			Architecture of cpu
+			
+	config LINUX_SRC_PATH
+		depends on Kernel_Mode
+		string "LINUX_SRC_PATH"
+		help
+			Define the root path of linux source code.
+endmenu
+
+choice
+	prompt "SWITCH_SERIES"
+	help
+		Define switch chip series name. e.g.:tiger
+
+	config Tiger
+		bool "Tiger"
+endchoice
+
+choice
+	prompt "Select the board hardware config"
+	help
+		Select the demo config or add hardware config according to your own design.
+
+	config Board_AUTO_Detect
+		bool "Board_AUTO_Detect"
+	config Board_YT9215RB_Default_Demo
+		depends on Tiger
+		bool "Board_YT9215RB_Default_Demo"
+	config Board_YT9215RB_YT8531_Demo
+		depends on Tiger
+		bool "Board_YT9215RB_YT8531_Demo"
+	config Board_YT9215S_YT8531_Fib_Demo
+		depends on Tiger
+		bool "Board_YT9215S_YT8531_Fib_Demo"
+	config Board_YT9215S_Fib_Demo
+		depends on Tiger
+		bool "Board_YT9215S_Fib_Demo"
+	config Board_YT9215SC_Default_Demo
+		depends on Tiger
+		bool "Board_YT9215SC_Default_Demo"
+	config Board_Customer
+		bool "Board_Customer"
+endchoice
+
+config INTER_MCU
+    bool "Internal MCU"
+    help
+        internal mcu in switch
+
+menu "Supported phy list"
+    config PHY_YT8531
+        bool "YT8531"
+        help
+            single port phy
+endmenu
+
+choice
+	prompt "Select sdk release mode"
+	help
+		Select sdk model for different release
+
+	config SDK_MODEL_FULL
+		bool "SDK_MODEL_FULL"
+	config SDK_MODEL_CUST
+		bool "SDK_MODEL_CUST"
+endchoice
+
+config YT_SDK_VERSION
+	string "YT_SDK_VERSION"
+	help
+		used to define sdk version,
+		to update the YT_SDK_VERSION in version.h
+
+menu "sdk optional"
+    config VTY_CMD_LINE
+		depends on OS_Cyg || User_Mode
+        bool "cmd support"
+        help
+            tty cmd line support
+
+	choice
+		prompt "Select switch access mode"
+		help
+			Select access mode for switch
+
+		default UART
+
+		config UART
+			bool "UART"
+		
+		config CTRLIF
+			bool "CTRLIF"
+		
+		config MEM
+			bool "MEM"
+	endchoice
+
+    config GCOV
+        bool "gcov support"
+        help
+            gcov support
+
+    config SDK_TEST
+        bool "sdk test api support"
+        help
+            sdk test support
+
+endmenu
+

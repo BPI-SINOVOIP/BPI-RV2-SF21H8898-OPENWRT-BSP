@@ -1,0 +1,24 @@
+{
+	"advance": {
+		"title": "Advance",
+		"index": 50
+	},
+	"advance/dmz": {
+		"title": "DMZ",
+		"acls": [ "superuser" ],
+		"view": "advance/dmz",
+		"index": 10
+	},
+	"advance/capture": {
+		"title": "Packet Capture",
+		"acls": [ "superuser" ],
+		"view": "advance/capture",
+		"index": 50
+	},
+	"advance/diagnose": {
+		"title": "Diagnose",
+		"acls": [ "superuser" ],
+		"view": "advance/diagnose",
+		"index": 60
+	}
+}

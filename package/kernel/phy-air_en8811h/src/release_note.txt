@@ -1,0 +1,108 @@
+Change Log:
+[2024/09/04] v1.2.6
+1. Support DTS settings for Co-clock output.
+2. Mute Tx before loading MD32 FW
+3. Enhance cable diag feature
+4. The default setting for CKO(Co-clock output) is disabled.
+* MD32 FW 24082302 updated:
+1. Reinitialize the FNPLL clock during MD32 startup.
+2. Optimize cable diag
+3. Set Co-Clock default enable
+4. Enable EMI Calibration Function
+5. Enhance AN control mechanism
+6. Fix internal bus arbitrator issue
+
+
+[2024/03/08] v1.2.5
+1. Added surge 5R API.
+2. Add CL22 and CL45 command
+* MD32 8811_24030702 updated:
+1. Fix the issue of external loopback
+2. Fix the issue of down-shift 
+3. Add surge protection to support 0R and 5R mode
+4. Enhance cable diag accuracy of cable length
+5. Improved IoT performance and stability
+
+[2024/01/12] v1.2.4
+1. Added SSC API.
+* MD32 8811_240112_02 updated:
+1. Fixed the issue of MAC Deadbeef
+2. Fixed the issue of LDO Bus Deadbeef
+3. Improved IoT performance and stability
+
+[2023/11/23] v1.2.3
+1. Supported polarity setting in dts
+2. Added temperature API and link partner ability API.
+* MD32 8811_23112102 updated:
+1. Fixed the issue of 1G speed down shift to 100M
+2. Added the loopback recovery function for 2.5G Ext / 2.5G Int / 1G Ext loopback settings
+3. Improved IoT performance and stability
+4. Fixed the issue of settings being lost when powering down and then powering up.
+5. Fixed the issue of losing settings when the device is powered off and then powered on
+6. Fixed the issue of experiencing abnormal behavior when changing the speed to 100/1000Mbps and powering down/up the PHY
+
+[2023/09/01] v1.2.2
+1.Add DEBUGFS for accessing more information.
+2.Modified for Linux coding style.
+
+[2023/07/18] v1.2.1
+* MD32 EN8811_0717_05 updated:
+1.Fix the system hang issue (need power down/up to link up)
+2.Fix Pause frame issue during system initialization
+3.Improve linkup time and IoT performance
+
+[2023/06/08] v1.2.0
+* MD32 EN8811_0608_01 updated:
+1.Improved IoT performance and stability
+
+[2023/06/06] v1.1.9
+* MD32 EN8811_0606_01 updated:
+1.Improved IoT performance and stability
+
+[2023/06/02] v1.1.8
+* MD32 EN8811_0531_01 updated:
+1.Improved IoT performance and stability
+2.Keep LED settings after power down
+3.Fixed MT7986 integration issues
+
+[2023/05/15] v1.1.7
+* MD32 EN8811_0512_09 updated:
+1.Improved IoT performance and stability
+
+[2023/04/15] v1.1.6
+* MD32 FW_8811_SOC_0411_a updated:
+1.Improved IoT performance and stability
+
+[2023/04/14] v1.1.5
+* MD32 FW_8811_SOC_0411_9 updated:
+1.Improved inter-operability to various link partners
+2.Improved compatibility to SoC driver code
+
+[2023/03/15] v1.1.4
+* Optimize output message
+* MD32 FW_EN8811_23022301 updated
+
+[2023/01/11] v1.1.3
+* Support linux backward compatibility
+* Remove unnecessary configuration.
+
+[2022/12/21] v1.1.2
+* Refine LED configuration API
+* MD32 FW_EN8811_REF_E2_221214_01_bin updated
+
+[2022/12/09] v1.1.1
+* Add read_status API
+* MD32 FW_EN8811_REF_E2_221128_03_bin updated
+
+[2022/11/25] v1.1.0
+* MD32 FW updated:
+1. port link down issue fixed.
+
+[2022/11/18] v1.0.9
+* Add LED2 setting
+
+[2022/10/28] v1.0.8
+* Support Multi-PHY.
+
+[2022/10/26] v1.0.7
+* Optimize code flow.

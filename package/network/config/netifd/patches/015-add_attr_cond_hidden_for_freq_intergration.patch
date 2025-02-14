@@ -1,0 +1,40 @@
+Index: netifd-2022-02-20-136006b8/device.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/device.c
++++ netifd-2022-02-20-136006b8/device.c
+@@ -67,6 +67,7 @@ static const struct blobmsg_policy dev_a
+ 	[DEV_ATTR_GROUP] = { .name = "group", .type = BLOBMSG_TYPE_INT32 },
+         [DEV_ATTR_BRINPUT_DISABLE] = { .name = "disable_input", .type = BLOBMSG_TYPE_BOOL },
+ 	[DEV_ATTR_NETISOLATE] = { .name = "netisolate", .type = BLOBMSG_TYPE_BOOL },
++	[DEV_ATTR_COND_HIDDEN] = { .name = "cond_hidden", .type = BLOBMSG_TYPE_BOOL },
+ };
+ 
+ const struct uci_blob_param_list device_attr_list = {
+Index: netifd-2022-02-20-136006b8/device.h
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/device.h
++++ netifd-2022-02-20-136006b8/device.h
+@@ -65,6 +65,7 @@ enum {
+ 	DEV_ATTR_GROUP,
+         DEV_ATTR_BRINPUT_DISABLE,
+ 	DEV_ATTR_NETISOLATE,
++	DEV_ATTR_COND_HIDDEN,
+ 	__DEV_ATTR_MAX,
+ };
+ 
+@@ -132,6 +133,7 @@ enum {
+ 	DEV_OPT_GROUP                   = (1ULL << 32),
+         DEV_OPT_BRINPUT_DISABLE         = (1ULL << 33),
+ 	DEV_OPT_NETISOLATE              = (1ULL << 34),
++	DEV_OPT_COND_HIDDEN             = (1ULL << 35),
+ };
+ 
+ /* events broadcasted to all users of a device */
+@@ -212,6 +214,7 @@ struct device_settings {
+ 	unsigned int group;
+         bool disable_input;
+ 	bool netisolate;
++	bool cond_hidden;
+ };
+ 
+ /*

@@ -1,0 +1,17 @@
+Index: netifd-2022-02-20-136006b8/wireless.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/wireless.c
++++ netifd-2022-02-20-136006b8/wireless.c
+@@ -614,12 +614,6 @@ wireless_device_retry_setup(struct wirel
+ 	if (wdev->state == IFS_TEARDOWN || wdev->state == IFS_DOWN || wdev->cancel)
+ 		return;
+ 
+-	netifd_log_message(wdev->retry ? L_WARNING : L_CRIT,
+-			   "Wireless device '%s' setup failed, retry=%d\n",
+-			   wdev->name, wdev->retry);
+-	if (--wdev->retry < 0)
+-		wdev->retry_setup_failed = true;
+-
+ 	__wireless_device_set_down(wdev);
+ }
+ 

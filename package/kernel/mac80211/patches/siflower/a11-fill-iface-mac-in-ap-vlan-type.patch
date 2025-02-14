@@ -1,0 +1,12 @@
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4134,6 +4134,9 @@ static int _nl80211_new_interface(struct
+ 
+ 	if (!rdev->ops->add_virtual_intf)
+ 		return -EOPNOTSUPP;
++	
++	if ((type == NL80211_IFTYPE_AP_VLAN) && info->attrs[NL80211_ATTR_MAC])
++		nla_memcpy(params.macaddr, info->attrs[NL80211_ATTR_MAC], ETH_ALEN);
+ 
+ 	if ((type == NL80211_IFTYPE_P2P_DEVICE || type == NL80211_IFTYPE_NAN ||
+ 	     rdev->wiphy.features & NL80211_FEATURE_MAC_ON_CREATE) &&

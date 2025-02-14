@@ -1,0 +1,219 @@
+#!/bin/sh
+
+. /lib/functions.sh
+
+
+get_phy() {
+    local path=$(uci get wireless.$2.path 2>/dev/null)
+
+    if [ -n "$path" ];then
+	phy="$(iwinfo nl80211 phyname "path=$path")"
+	if [ -z "$phy" ];then
+		echo "2------------------sf_wpad: cannot get phy name for $2" > /dev/console
+		exit 1
+	fi
+	eval "$1=\"$phy\""
+    else
+        echo "1------------------sf_wpad: cannot get phy name for $2" > /dev/console
+        exit 1
+    fi
+}
+
+# usage: check_iface section ap_2g_flag ap_5g_flag
+# check whether any ap is enabled in 2.4G or 5G band. if yes,  ap_2g_flag or ap_5g_flag will is set to true
+check_iface() {
+    local iface_disabled=$(uci get wireless.${1}.disabled 2>/dev/null)
+    local device=$(uci get wireless.${1}.device 2>/dev/null)
+    local device_disabled=$(uci get wireless.${device}.disabled 2>/dev/null)
+
+    if [ "x${device_disabled}" != "x1" -a "x${iface_disabled}" != "x1" ];then
+        local mode=$(uci get wireless.${1}.mode)
+        case "$mode" in
+            ap)
+                local band=$(uci get wireless.${device}.band)
+                case "$band" in
+                    2.4G)
+                        eval "$2=1"
+                        [ -n "${phy_2g}" ] || get_phy phy_2g "${device}"
+                    ;;
+                    5G)
+                        eval "$3=1"
+                        [ -n "${phy_5g}" ] || get_phy phy_5g "${device}"
+                    ;;
+                esac
+            ;;
+            sta)
+            ;;
+        esac
+    fi
+}
+
+# usage: store_sta_ifaces section sta_ifaces
+# store all enabled stations' section names in wireless conf file to sta_ifaces
+store_sta_ifaces() {
+    local disabled=$(uci get wireless.${1}.disabled  2>/dev/null)
+    local device=$(uci get wireless.${1}.device 2>/dev/null)
+    local device_disabled=$(uci get wireless.${device}.disabled 2>/dev/null)
+
+    local mode=$(uci get wireless.${1}.mode)
+    if [ "$mode" = "sta" -a "x${device_disabled}" != "x1" -a "x${disabled}" != "x1" ];then
+        eval "${2}=\"\${$2} $1\""
+    fi
+}
+
+# usage: wait_until_file file_name
+# wait until given file is generated
+wait_until_file() {
+    local i=0
+    while :
+    do
+        [ -s "$1" ] && break
+        if [ "$i" -eq 10 ];then
+            echo "it takes too long to wait for generating" > /dev/ttyAMA0
+            exit 1
+        fi
+        sleep 1
+        i=$((i+1))
+    done
+}
+
+
+# wait until conf files for ap and sta are generated
+wait_until_conf_file() {
+    config_load wireless
+
+    phy_2g=
+    phy_5g=
+
+    # wait until hostapd conf file for ap is generated
+    config_foreach check_iface wifi-iface ap_2g_flag ap_5g_flag
+
+    if [ "${ap_2g_flag}" = "1" ];then
+        wait_until_file "/var/run/hostapd-${phy_2g}.conf"
+        sleep 1
+        hostapd_conf_file="${hostapd_conf_file} /var/run/hostapd-${phy_2g}.conf"
+    fi
+    if [ "${ap_5g_flag}" = "1" ];then
+        wait_until_file "/var/run/hostapd-${phy_5g}.conf"
+        sleep 1
+        hostapd_conf_file="${hostapd_conf_file} /var/run/hostapd-${phy_5g}.conf"
+    fi
+
+    # wait until wpa_supplicant conf file for sta is generated
+    config_foreach store_sta_ifaces wifi-iface all_sta
+    for sta in ${all_sta}
+    do
+        ifname=$(uci get wireless.${sta}.ifname)
+        wait_until_file "/var/run/wpa_supplicant-${ifname}.conf"
+        sleep 1
+    done
+}
+
+# generate arguments used to start wpa_supplicant
+generate_wpa_supplicant_args() {
+    local stations="$1"
+    local args i
+    local _rpath="/var/run/wpa_supplicant"
+    local network_bridge=""
+
+    args="-B -P /var/run/wifi-wpa_supplicant.pid"
+
+    i=0
+    for sta in ${stations}
+    do
+        network=$(uci show wireless.${sta}.network 2>/dev/null)
+        if [ -n "${network}" ];then
+            network=$(uci get wireless.${sta}.network)
+            device=$(uci get network.${network}.device)
+            if [ -d /sys/class/net/"${device}"/bridge ];then
+                network_bridge="${device}"
+            else
+                network_bridge=""
+            fi
+        fi
+        ifname=$(uci get wireless.${sta}.ifname)
+
+        if [ "$i" != "0" ];then
+            args="$args -N"
+        else
+            i=$((i+1))
+        fi
+        args="$args ${network_bridge:+-b ${network_bridge}}"
+        args="$args -D nl80211"
+        args="$args -i ${ifname}"
+        args="$args -c ${_rpath}-${ifname}.conf"
+        args="$args -C ${_rpath}"
+    done
+    eval "${2}=\"$args\""
+}
+
+siwifi_stop_hostapd_wpasupplicant() {
+    if [ -e wifi_up_lock ]; then
+        threshold=10
+        file_mtime=$(ls -l --full-time wifi_up_lock | awk '{print $6, $7}')
+        file_mtime=$(date -d "$file_mtime" +%s)
+        current_time=$(date +%s)
+        time_diff=$((current_time - file_mtime))
+
+        if [ $time_diff -lt $threshold ]; then
+            wifi_pid=$(pgrep -f "sbin/wifi")
+            echo "The wifi command must be $threshold seconds from the last time"
+            kill $wifi_pid 2>/dev/null
+            exit 1
+        fi
+    fi
+    touch wifi_up_lock
+
+    if ps | grep -v grep | grep "hostapd.pid" > /dev/null; then
+        killall hostapd
+    fi
+
+    if ps | grep -v grep | grep "wpa_supplicant" > /dev/null; then
+        killall wpa_supplicant
+    fi
+
+    while true;
+    do
+        host_pro=$(ps | grep hostapd.pid | grep -v grep)
+        if [ -z "$host_pro" ];then
+            break
+        fi
+    done
+
+}
+
+case "$1" in
+    start)
+        ap_2g_flag="0"
+        ap_5g_flag="0"
+        all_sta=
+        hostapd_conf_file=
+
+        result=$(ps | grep hostapd.pid | grep -v grep)
+        if [ -n "$result" ]; then
+            killall hostapd wpa_supplicant 2>/dev/null
+        fi
+
+        wait_until_conf_file
+        sleep 1
+
+        # start ap
+        if [ "${ap_2g_flag}" = "1" -o "${ap_5g_flag}" = "1" ];then
+            /usr/sbin/hostapd -P /var/run/wifi-hostapd.pid -B ${hostapd_conf_file}
+        else
+            echo "there is no ap to start" > /dev/ttyAMA0
+        fi
+
+        # start sta
+        if [ -n "${all_sta}" ];then
+            generate_wpa_supplicant_args "${all_sta}" wpa_args
+            /usr/sbin/wpa_supplicant ${wpa_args}
+        fi
+
+        rm -rf wifi_up_lock
+    ;;
+    stop)
+        siwifi_stop_hostapd_wpasupplicant
+    ;;
+    *) echo "Invalid command: $1";;
+esac

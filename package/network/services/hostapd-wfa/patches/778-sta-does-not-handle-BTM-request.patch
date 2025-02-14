@@ -1,0 +1,21 @@
+Index: hostapd-2022-01-16-cff80b4f/wpa_supplicant/wnm_sta.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/wpa_supplicant/wnm_sta.c
++++ hostapd-2022-01-16-cff80b4f/wpa_supplicant/wnm_sta.c
+@@ -1898,9 +1898,14 @@ void ieee802_11_rx_wnm_action(struct wpa
+
+ 	switch (act) {
+ 	case WNM_BSS_TRANS_MGMT_REQ:
+-		ieee802_11_rx_bss_trans_mgmt_req(wpa_s, pos, end,
+-						 !(mgmt->da[0] & 0x01));
++		/* STA lack of support for cross-band operation
++		   unable to perform roaming operations after receiving the BTM request
++		   when the AP is in dual-band consolidated mode
++		*/
+ 		break;
++		/*ieee802_11_rx_bss_trans_mgmt_req(wpa_s, pos, end,
++						 !(mgmt->da[0] & 0x01));
++		break;*/
+ 	case WNM_SLEEP_MODE_RESP:
+ 		ieee802_11_rx_wnmsleep_resp(wpa_s, pos, end - pos);
+ 		break;

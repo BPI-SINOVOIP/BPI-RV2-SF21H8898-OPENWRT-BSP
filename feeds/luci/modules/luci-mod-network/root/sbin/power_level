@@ -1,0 +1,30 @@
+#!/bin/sh
+# $1: init
+# $2: value
+# $3: band
+# $4: section_id
+
+if [ $1 == '1' ]; then
+    change_txpower0=$(cat sys/kernel/debug/ieee80211/phy0/siwifi/change_txpower)
+    change_txpower1=$(cat sys/kernel/debug/ieee80211/phy0/siwifi/change_txpower)
+    power_level0=$(echo "$change_txpower0" | awk '{print $3}')
+    power_level1=$(echo "$change_txpower1" | awk '{print $3}')
+    level0=$(( ($power_level0 + 24) / 12 ))
+    level1=$(( ($power_level1 + 24) / 12 ))
+    uci set wireless.radio0.power_level=$level0
+    uci set wireless.radio1.power_level=$level1
+    uci commit wireless
+else
+    value=$((($2 * 12) -24))
+    band=$3
+    section_id=$4
+
+    if [ $band == '5G' ]; then
+        echo $value > sys/kernel/debug/ieee80211/phy0/siwifi/change_txpower
+    else
+        echo $value > sys/kernel/debug/ieee80211/phy1/siwifi/change_txpower
+    fi
+
+    uci set wireless.$section_id.power_level=$2
+    uci commit wireless
+fi

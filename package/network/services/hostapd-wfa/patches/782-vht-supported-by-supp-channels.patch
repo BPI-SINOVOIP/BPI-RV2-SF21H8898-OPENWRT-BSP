@@ -1,0 +1,157 @@
+Index: hostapd-2022-01-16-cff80b4f/src/ap/ap_drv_ops.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/ap_drv_ops.c
++++ hostapd-2022-01-16-cff80b4f/src/ap/ap_drv_ops.c
+@@ -418,7 +418,7 @@ int hostapd_sta_add(struct hostapd_data
+ 		    size_t he_capab_len,
+ 		    const struct ieee80211_he_6ghz_band_cap *he_6ghz_capab,
+ 		    u32 flags, u8 qosinfo, u8 vht_opmode, int supp_p2p_ps,
+-		    int set)
++		    int set, u8 *supported_channels, u8 supported_channels_len)
+ {
+ 	struct hostapd_sta_add_params params;
+ 
+@@ -445,6 +445,8 @@ int hostapd_sta_add(struct hostapd_data
+ 	params.qosinfo = qosinfo;
+ 	params.support_p2p_ps = supp_p2p_ps;
+ 	params.set = set;
++	params.supp_channels = supported_channels;
++	params.supp_channels_len = supported_channels_len;
+ 	return hapd->driver->sta_add(hapd->drv_priv, &params);
+ }
+ 
+Index: hostapd-2022-01-16-cff80b4f/src/ap/ap_drv_ops.h
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/ap_drv_ops.h
++++ hostapd-2022-01-16-cff80b4f/src/ap/ap_drv_ops.h
+@@ -45,7 +45,7 @@ int hostapd_sta_add(struct hostapd_data
+ 		    size_t he_capab_len,
+ 		    const struct ieee80211_he_6ghz_band_cap *he_6ghz_capab,
+ 		    u32 flags, u8 qosinfo, u8 vht_opmode, int supp_p2p_ps,
+-		    int set);
++		    int set, u8 *supported_channels, u8 supported_channels_len);
+ int hostapd_set_privacy(struct hostapd_data *hapd, int enabled);
+ int hostapd_set_generic_elem(struct hostapd_data *hapd, const u8 *elem,
+ 			     size_t elem_len);
+Index: hostapd-2022-01-16-cff80b4f/src/ap/ieee802_11.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/ieee802_11.c
++++ hostapd-2022-01-16-cff80b4f/src/ap/ieee802_11.c
+@@ -56,7 +56,6 @@
+ #include "dpp_hostapd.h"
+ #include "gas_query_ap.h"
+ 
+-
+ #ifdef CONFIG_FILS
+ static struct wpabuf *
+ prepare_auth_resp_fils(struct hostapd_data *hapd,
+@@ -4515,6 +4514,10 @@ static int check_assoc_ies(struct hostap
+ 		resp = set_sta_vht_opmode(hapd, sta, elems.vht_opmode_notif);
+ 		if (resp != WLAN_STATUS_SUCCESS)
+ 			return resp;
++		resp = copy_sta_supp_channels(hapd, sta, elems.supp_channels,
++												 elems.supp_channels_len);
++		if (resp != WLAN_STATUS_SUCCESS)
++			return resp;
+ 	}
+ 
+ 	if (hapd->iconf->ieee80211ac && hapd->iconf->require_vht &&
+@@ -4926,7 +4929,6 @@ static int add_associated_sta(struct hos
+ 	struct ieee80211_vht_capabilities vht_cap;
+ 	struct ieee80211_he_capabilities he_cap;
+ 	int set = 1;
+-
+ 	/*
+ 	 * Remove the STA entry to ensure the STA PS state gets cleared and
+ 	 * configuration gets updated. This is relevant for cases, such as
+@@ -5005,7 +5007,7 @@ static int add_associated_sta(struct hos
+ 			    sta->he_6ghz_capab,
+ 			    sta->flags | WLAN_STA_ASSOC, sta->qosinfo,
+ 			    sta->vht_opmode, sta->p2p_ie ? 1 : 0,
+-			    set)) {
++			    set, sta->supported_channels, sta->supported_channels_len)) {
+ 		hostapd_logger(hapd, sta->addr,
+ 			       HOSTAPD_MODULE_IEEE80211, HOSTAPD_LEVEL_NOTICE,
+ 			       "Could not %s STA to kernel driver",
+Index: hostapd-2022-01-16-cff80b4f/src/ap/ieee802_11.h
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/ieee802_11.h
++++ hostapd-2022-01-16-cff80b4f/src/ap/ieee802_11.h
+@@ -87,6 +87,8 @@ u16 copy_sta_vendor_vht(struct hostapd_d
+ void update_ht_state(struct hostapd_data *hapd, struct sta_info *sta);
+ void ht40_intolerant_add(struct hostapd_iface *iface, struct sta_info *sta);
+ void ht40_intolerant_remove(struct hostapd_iface *iface, struct sta_info *sta);
++u16 copy_sta_supp_channels(struct hostapd_data *hapd, struct sta_info *sta,
++		       const u8 *supported_channels, u8 supported_channels_len);
+ u16 copy_sta_vht_capab(struct hostapd_data *hapd, struct sta_info *sta,
+ 		       const u8 *vht_capab);
+ u16 copy_sta_vht_oper(struct hostapd_data *hapd, struct sta_info *sta,
+Index: hostapd-2022-01-16-cff80b4f/src/ap/ieee802_11_vht.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/ieee802_11_vht.c
++++ hostapd-2022-01-16-cff80b4f/src/ap/ieee802_11_vht.c
+@@ -9,7 +9,6 @@
+  */
+ 
+ #include "utils/includes.h"
+-
+ #include "utils/common.h"
+ #include "common/ieee802_11_defs.h"
+ #include "hostapd.h"
+@@ -166,6 +165,30 @@ static int check_valid_vht_mcs(struct ho
+ 	return 0;
+ }
+ 
++u16 copy_sta_supp_channels(struct hostapd_data *hapd, struct sta_info *sta,
++		       const u8 *supported_channels, u8 supported_channels_len)
++{
++	if (!supported_channels) {
++		os_free(sta->supported_channels);
++		sta->supported_channels = NULL;
++		sta->supported_channels_len = 0;
++		return WLAN_STATUS_SUCCESS;
++	}
++
++	if (sta->supported_channels == NULL) {
++		sta->supported_channels =
++			os_zalloc(supported_channels_len);
++		if (sta->supported_channels == NULL)
++			return WLAN_STATUS_UNSPECIFIED_FAILURE;
++	}
++
++	// sta->flags |= WLAN_STA_VHT;
++	sta->supported_channels_len = supported_channels_len;
++	os_memcpy(sta->supported_channels, supported_channels,
++		  supported_channels_len);
++
++	return WLAN_STATUS_SUCCESS;
++}
+ 
+ u16 copy_sta_vht_capab(struct hostapd_data *hapd, struct sta_info *sta,
+ 		       const u8 *vht_capab)
+Index: hostapd-2022-01-16-cff80b4f/src/ap/sta_info.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/sta_info.c
++++ hostapd-2022-01-16-cff80b4f/src/ap/sta_info.c
+@@ -1657,7 +1657,7 @@ int ap_sta_re_add(struct hostapd_data *h
+ 			    sta->supported_rates,
+ 			    sta->supported_rates_len,
+ 			    0, NULL, NULL, NULL, 0, NULL,
+-			    sta->flags, 0, 0, 0, 0)) {
++			    sta->flags, 0, 0, 0, 0, NULL, 0)) {
+ 		hostapd_logger(hapd, sta->addr,
+ 			       HOSTAPD_MODULE_IEEE80211,
+ 			       HOSTAPD_LEVEL_NOTICE,
+Index: hostapd-2022-01-16-cff80b4f/src/ap/sta_info.h
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/ap/sta_info.h
++++ hostapd-2022-01-16-cff80b4f/src/ap/sta_info.h
+@@ -332,6 +332,8 @@ struct sta_info {
+ #ifdef CONFIG_PASN
+ 	struct pasn_data *pasn;
+ #endif /* CONFIG_PASN */
++	u8 *supported_channels;
++	u8 supported_channels_len;
+ };
+ 
+ 

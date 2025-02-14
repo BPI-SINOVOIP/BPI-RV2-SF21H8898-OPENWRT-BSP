@@ -1,0 +1,49 @@
+Index: netifd-2022-02-20-136006b8/wireless.c
+===================================================================
+--- netifd-2022-02-20-136006b8.orig/wireless.c
++++ netifd-2022-02-20-136006b8/wireless.c
+@@ -498,17 +498,20 @@ wireless_device_free(struct wireless_dev
+ }
+ 
+ static void
+-wdev_handle_config_change(struct wireless_device *wdev)
++wdev_handle_config_change(struct wireless_device *wdev, bool is_config_changed)
+ {
+ 	enum interface_config_state state = wdev->config_state;
+ 
+ 	switch(state) {
+-	case IFC_RELOAD:
+-		wdev->retry = WIRELESS_SETUP_RETRY;
+-		wdev->retry_setup_failed = false;
+-		fallthrough;
+ 	case IFC_NORMAL:
+-		__wireless_device_set_up(wdev, 0);
++        case IFC_RELOAD:
++                if (wdev->autostart){
++                        __wireless_device_set_up(wdev,0);
++                } else {
++                        //force set up if autostart retry max reached by something has changed
++                        if(is_config_changed)
++                              wireless_device_set_up(wdev);
++                }
+ 
+ 		wdev->config_state = IFC_NORMAL;
+ 		break;
+@@ -537,7 +540,7 @@ wireless_device_mark_down(struct wireles
+ 	wdev->cancel = false;
+ 	wdev->state = IFS_DOWN;
+ 	wireless_device_free_state(wdev);
+-	wdev_handle_config_change(wdev);
++	wdev_handle_config_change(wdev,false);
+ }
+ 
+ /* timeout callback to protect the tear down */
+@@ -655,7 +658,7 @@ wdev_set_config_state(struct wireless_de
+ 
+ 	wdev->config_state = s;
+ 	if (wdev->state == IFS_DOWN)
+-		wdev_handle_config_change(wdev);
++		wdev_handle_config_change(wdev,true);
+ 	else if (!wdev->reconf || wdev->state != IFS_UP)
+ 		__wireless_device_set_down(wdev);
+ }

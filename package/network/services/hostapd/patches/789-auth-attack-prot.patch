@@ -1,0 +1,28 @@
+--- a/src/ap/ieee802_11.c
++++ b/src/ap/ieee802_11.c
+@@ -6321,6 +6321,12 @@ int ieee802_11_mgmt(struct hostapd_data
+ 		break;
+ 	case WLAN_FC_STYPE_ASSOC_REQ:
+ 		wpa_printf(MSG_DEBUG, "mgmt::assoc_req");
++		struct sta_info *sta;
++		sta = ap_get_sta(hapd, mgmt->sa);
++		if (sta == NULL || (sta->flags & WLAN_STA_AUTH) == 0) {
++			ret = 1;
++			break;
++		}
+ 		handle_assoc(hapd, mgmt, len, 0, ssi_signal);
+ 		ret = 1;
+ 		break;
+@@ -6384,10 +6390,11 @@ static void handle_auth_cb(struct hostap
+ 	status_code = le_to_host16(mgmt->u.auth.status_code);
+ 
+ 	if (!ok) {
++		ap_free_sta(hapd, sta);
+ 		hostapd_logger(hapd, mgmt->da, HOSTAPD_MODULE_IEEE80211,
+ 			       HOSTAPD_LEVEL_NOTICE,
+ 			       "did not acknowledge authentication response");
+-		goto fail;
++		return;
+ 	}
+ 
+ 	if (status_code == WLAN_STATUS_SUCCESS &&

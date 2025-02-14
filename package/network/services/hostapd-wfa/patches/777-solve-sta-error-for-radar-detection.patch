@@ -1,0 +1,28 @@
+Index: hostapd-2022-01-16-cff80b4f/src/drivers/driver_nl80211.c
+===================================================================
+--- hostapd-2022-01-16-cff80b4f.orig/src/drivers/driver_nl80211.c
++++ hostapd-2022-01-16-cff80b4f/src/drivers/driver_nl80211.c
+@@ -1809,11 +1809,21 @@ static int wpa_driver_nl80211_set_countr
+ 	alpha2[2] = '\0';
+ 
+ 	if (!nl80211_cmd(drv, msg, 0, NL80211_CMD_REQ_SET_REG) ||
+-	 nla_put_string(msg, NL80211_ATTR_REG_ALPHA2, alpha2) ||
+-	     ((alpha2_arg[3] == 'T') && nla_put_u32(msg, NL80211_ATTR_DFS_CAC_TIME, 0))) {
++	 nla_put_string(msg, NL80211_ATTR_REG_ALPHA2, alpha2)) {
+ 		nlmsg_free(msg);
+ 		return -EINVAL;
+ 	}
++
++	if ((drv->nlmode == NL80211_IFTYPE_STATION) &&
++	 nla_put_u32(msg, NL80211_ATTR_DFS_CAC_TIME, NL80211_IFTYPE_STATION)) {
++		nlmsg_free(msg);
++		return -EINVAL;
++	} else if ((alpha2_arg[3] == 'T') &&
++	 nla_put_u32(msg, NL80211_ATTR_DFS_CAC_TIME, 0)) {
++		nlmsg_free(msg);
++		return -EINVAL;
++	}
++
+ 	if (send_and_recv_msgs(drv, msg, NULL, NULL, NULL, NULL))
+ 		return -EINVAL;
+ 	return 0;

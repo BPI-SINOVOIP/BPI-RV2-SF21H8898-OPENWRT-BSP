@@ -1,0 +1,18 @@
+{
+	"luci-mod-easymesh-easymesh": {
+		"description": "Grant access to easymesh configuration",
+		"read": {
+			"uci": [ "wireless", "easymesh"],
+			"file": {
+				"/tmp/mesh_topo.txt": [ "read" ]
+			}
+		},
+		"write": {
+			"uci": [ "wireless", "easymesh"],
+			"file": {
+				"/opt/easymesh/sf_easymesh": [ "exec" ],
+				"/bin/sf_easymesh": [ "exec" ]
+			}
+		}
+	}
+}

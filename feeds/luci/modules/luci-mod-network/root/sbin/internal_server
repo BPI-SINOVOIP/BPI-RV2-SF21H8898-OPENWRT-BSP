@@ -1,0 +1,57 @@
+#!/bin/sh
+#$1: section
+#$2: value
+
+find_internal_dns_server=0;
+file_path="../tmp/resolv.conf.d/resolv.conf.auto"
+output_file_path="../etc/resolv.conf.d"
+output_file="../etc/resolv.conf.d/resolv.conf.auto1"
+
+write_output_file() {
+    > "$output_file"
+
+    echo "# Interface wan" > "$output_file"
+
+    while IFS= read -r line
+    do
+        if echo "$line" | grep -qE "([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)"; then
+            ip_address=$(echo "$line" | grep -oE "([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)")
+            # search if there is private ip (internal dns server)
+            if echo "$ip_address" | grep -qE "^10\.|^172\.(1[6-9]|2[0-9]|3[01])\.|^192\.168\."; then
+                find_internal_dns_server=1;
+                echo "nameserver $ip_address" >> "$output_file"
+            fi
+        fi
+    done < "$file_path"
+
+    if [ $find_internal_dns_server == 0 ]; then
+        uci set dhcp.$1.internal_server='0'
+        > "$output_file"
+        exit 0
+    fi
+}
+
+# init (when reboot or change wan,config would not change)
+if [ $2 == '2' ]; then
+    enable=`uci get dhcp.$1.internal_server`
+    if [ $enable == '1' ]; then
+        write_output_file
+    fi
+    exit 0
+
+# copy internal dns server from resolv.conf.auto to resolv.conf.auto1
+elif [ $2 == '1' ]; then
+
+    write_output_file
+    uci set dhcp.$1.rebind_protection='0'
+    uci set dhcp.$1.resolvfile='/etc/resolv.conf.d/resolv.conf.auto1'
+    uci del dhcp.$1.rebind_localhost
+    uci set dhcp.$1.internal_server='1'
+else
+    > "$output_file"
+    uci del dhcp.$1.resolvfile
+    uci set dhcp.$1.internal_server='0'
+fi
+
+uci commit dhcp
+./etc/init.d/dnsmasq restart

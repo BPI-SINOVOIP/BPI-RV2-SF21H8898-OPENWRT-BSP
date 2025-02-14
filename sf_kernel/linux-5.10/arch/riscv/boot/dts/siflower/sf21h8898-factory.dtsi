@@ -1,0 +1,77 @@
+&factory {
+	compatible = "nvmem-cells";
+	#address-cells = <1>;
+	#size-cells = <1>;
+	mtd_mac_address: mac-address@0 {
+		reg = <0x0 0x6>;
+	};
+	mtd_sn_number: sn-number@6 {
+		reg = <0x6 0x10>;
+	};
+	mtd_sn_flag: sn-flag@16 {
+		reg = <0x16 0x1>;
+	};
+	mtd_pcba_boot: pcba-boot@17 {
+		reg = <0x17 0x4>;
+	};
+	mtd_hardware_ver_flag: hardware-ver-flag@1b {
+		reg = <0x1b 0x2>;
+	};
+	mtd_hardware_ver: hardware-ver@1d {
+		reg = <0x1d 0x20>;
+	};
+	mtd_country_id: country-id@3d {
+		reg = <0x3d 0x2>;
+	};
+	mtd_model_ver_flag: model-ver-flag@3f {
+		reg = <0x3f 0x2>;
+	};
+	mtd_model_ver: model-ver@41 {
+		reg = <0x41 0x20>;
+	};
+	mtd_hw_feature: hw-feature@61 {
+		reg = <0x61 0x4>;
+	};
+	mtd_vender_flag: vender-flag@65 {
+		reg = <0x65 0x2>;
+	};
+	mtd_vender: vender@67 {
+		reg = <0x67 0x10>;
+	};
+	mtd_product_key_flag: product-key-flag@77 {
+		reg = <0x77 0x2>;
+	};
+	mtd_product_key: product-key@79 {
+		reg = <0x79 0x20>;
+	};
+	mtd_login_info_flag: login-info-flag@99 {
+		reg = <0x99 0x2>;
+	};
+	mtd_login_info: login-info@9b {
+		reg = <0x9b 0x4>;
+	};
+	mtd_rom_type_flag: rom-type-flag@9f {
+		reg = <0x9f 0x2>;
+	};
+	mtd_rom_type: rom-type@a1 {
+		reg = <0xa1 0x4>;
+	};
+	mtd_wifi_version: wifi-version@800 {
+		reg = <0x800 0x2>;
+	};
+	mtd_wifi_info: wifi-info@802 {
+		reg = <0x802 0x1904>;
+	};
+	mtd_cooling_temp: cooling-temp@ae {
+		reg = <0xae 0x2>;
+	};
+	mtd_gmac_delay: gmac-delay@b2 {
+		reg = <0xb2 0x4>;
+	};
+	mtd_rssi_offset: rssi-offset@b6 {
+		reg = <0xb6 0x4>;
+	};
+	mtd_refpower: refpower@ba {
+		reg = <0xba 0x2>;
+	};
+};

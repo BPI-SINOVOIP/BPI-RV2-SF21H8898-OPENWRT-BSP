@@ -1,0 +1,64 @@
+--- a/Makefile
++++ b/Makefile
+@@ -102,12 +102,12 @@ OBJCOPY		=	llvm-objcopy
+ else
+ ifdef CROSS_COMPILE
+ CC		=	$(CROSS_COMPILE)gcc
+-AR		=	$(CROSS_COMPILE)ar
++AR		=	$(CROSS_COMPILE)gcc-ar
+ LD		=	$(CROSS_COMPILE)ld
+ OBJCOPY		=	$(CROSS_COMPILE)objcopy
+ else
+ CC		?=	gcc
+-AR		?=	ar
++AR		?=	gcc-ar
+ LD		?=	ld
+ OBJCOPY		?=	objcopy
+ endif
+@@ -349,18 +349,11 @@ GENFLAGS	+=	$(platform-genflags-y)
+ GENFLAGS	+=	$(firmware-genflags-y)
+ 
+ CFLAGS		=	-g -Wall -Werror -ffreestanding -nostdlib -fno-stack-protector -fno-strict-aliasing -ffunction-sections -fdata-sections
+-CFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls
+ # Optionally supported flags
+-ifeq ($(CC_SUPPORT_VECTOR),y)
+-CFLAGS		+=	-DOPENSBI_CC_SUPPORT_VECTOR
+-endif
+ ifeq ($(CC_SUPPORT_SAVE_RESTORE),y)
+ CFLAGS		+=	-mno-save-restore
+ endif
+-ifeq ($(CC_SUPPORT_STRICT_ALIGN),y)
+-CFLAGS		+=	-mstrict-align
+-endif
+-CFLAGS		+=	-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA)
++CFLAGS		+=	-mabi=$(PLATFORM_RISCV_ABI) -mcpu=c908i
+ CFLAGS		+=	-mcmodel=$(PLATFORM_RISCV_CODE_MODEL)
+ CFLAGS		+=	$(RELAX_FLAG)
+ CFLAGS		+=	$(GENFLAGS)
+@@ -373,16 +366,12 @@ CPPFLAGS	+=	$(platform-cppflags-y)
+ CPPFLAGS	+=	$(firmware-cppflags-y)
+ 
+ ASFLAGS		=	-g -Wall -nostdlib
+-ASFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls
+ ASFLAGS		+=	-fPIE
+ # Optionally supported flags
+ ifeq ($(CC_SUPPORT_SAVE_RESTORE),y)
+ ASFLAGS		+=	-mno-save-restore
+ endif
+-ifeq ($(CC_SUPPORT_STRICT_ALIGN),y)
+-ASFLAGS		+=	-mstrict-align
+-endif
+-ASFLAGS		+=	-mabi=$(PLATFORM_RISCV_ABI) -march=$(PLATFORM_RISCV_ISA)
++ASFLAGS		+=	-mabi=$(PLATFORM_RISCV_ABI) -mcpu=c908i
+ ASFLAGS		+=	-mcmodel=$(PLATFORM_RISCV_CODE_MODEL)
+ ASFLAGS		+=	$(RELAX_FLAG)
+ ifneq ($(CC_IS_CLANG),y)
+@@ -420,7 +409,7 @@ ifneq ($(DEBUG),)
+ CFLAGS		+=	-O0
+ ELFFLAGS	+=	-Wl,--print-gc-sections
+ else
+-CFLAGS		+=	-O2
++CFLAGS		+=	-O2 -flto
+ endif
+ 
+ # Setup functions for compilation

@@ -1,0 +1,45 @@
+Index: firewall4-2022-02-12-53caa1a7/root/etc/config/firewall
+===================================================================
+--- firewall4-2022-02-12-53caa1a7.orig/root/etc/config/firewall
++++ firewall4-2022-02-12-53caa1a7/root/etc/config/firewall
+@@ -25,10 +25,21 @@ config zone
+ 	option masq		1
+ 	option mtu_fix		1
+
++config zone
++	option name		guest
++	option input		REJECT
++	option forward		REJECT
++	option output		ACCEPT
++	option network		guest
++
+ config forwarding
+ 	option src		lan
+ 	option dest		wan
+
++config forwarding
++	option src		guest
++	option dest		wan
++
+ # We need to accept udp packets on port 68,
+ # see https://dev.openwrt.org/ticket/4108
+ config rule
+@@ -191,3 +202,18 @@ config rule
+ #	option dest_ip	194.25.2.129
+ #	option dest_port	120
+ #	option proto	tcp
++
++config rule
++	option name		DNSGuest
++	option src		guest
++	option dest_port	53
++	option proto		tcpudp
++	option target		ACCEPT
++
++config rule
++	option name		DHCPGuest
++	option src		guest
++	option src_port		67-68
++	option dest_port	67-68
++	option proto		udp
++	option target		ACCEPT
