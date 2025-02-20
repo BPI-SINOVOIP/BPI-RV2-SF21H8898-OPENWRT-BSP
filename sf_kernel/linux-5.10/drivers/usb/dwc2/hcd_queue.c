@@ -1721,9 +1721,7 @@ void dwc2_hcd_qh_free(struct dwc2_hsotg *hsotg, struct dwc2_qh *qh)
 int dwc2_hcd_qh_add(struct dwc2_hsotg *hsotg, struct dwc2_qh *qh)
 {
 	int status;
-#ifdef DEBUG_SOF
 	u32 intr_mask;
-#endif
 	ktime_t delay;
 
 	if (dbg_qh(qh))
@@ -1755,13 +1753,11 @@ int dwc2_hcd_qh_add(struct dwc2_hsotg *hsotg, struct dwc2_qh *qh)
 	status = dwc2_schedule_periodic(hsotg, qh);
 	if (status)
 		return status;
-#ifdef DEBUG_SOF
 	if (!hsotg->periodic_qh_count) {
 		intr_mask = dwc2_readl(hsotg, GINTMSK);
 		intr_mask |= GINTSTS_SOF;
 		dwc2_writel(hsotg, intr_mask, GINTMSK);
 	}
-#endif
 	hsotg->periodic_qh_count++;
 
 	return 0;

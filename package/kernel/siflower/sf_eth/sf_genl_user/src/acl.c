@@ -709,12 +709,36 @@ static int acl_table_dump(struct ubus_context *ctx, struct ubus_object *obj,
         return UBUS_STATUS_OK;
 }
 
+static int acl_table_dump_list(struct ubus_context *ctx, struct ubus_object *obj,
+                struct ubus_request_data *req, const char *method,
+                struct blob_attr *msg)
+{
+        struct blob_attr *tb[NUM_ACL_DUMP_BLOB_IDS] = { };
+        struct acl_genl_msg msg_dump_table = {
+                .method = ACL_DUMP_LIST,
+        };
+        int ret;
+
+        blobmsg_parse(acl_dump_blob_policy, NUM_ACL_DUMP_BLOB_IDS, tb, blob_data(msg), blob_len(msg));
+
+        if (!tb[NUM_ACL_DUMP_BLOB_IDS])
+                return UBUS_STATUS_INVALID_ARGUMENT;
+
+        msg_dump_table.is_eacl = !!(blobmsg_get_u32(tb[BLOB_ACL_DUMP_DIR]));
+
+        ret = acl_send_recv(&msg_dump_table, sizeof(msg_dump_table));
+        ubus_err_code_reply(ctx, req, ret);
+
+        return UBUS_STATUS_OK;
+}
+
 static const struct ubus_method acl_methods[] = {
 	UBUS_METHOD("add", acl_add, acl_add_blob_policy),
 	UBUS_METHOD("del", acl_del, acl_del_blob_policy),
 	UBUS_METHOD("clear", acl_clear, acl_clear_blob_policy),
-        UBUS_METHOD("set_mode", acl_set_mode, acl_set_mode_blob_policy),
-        UBUS_METHOD("dump", acl_table_dump, acl_dump_blob_policy),
+	UBUS_METHOD("set_mode", acl_set_mode, acl_set_mode_blob_policy),
+	UBUS_METHOD("dump", acl_table_dump, acl_dump_blob_policy),
+	UBUS_METHOD("dump_list", acl_table_dump_list, acl_dump_blob_policy),
 };
 
 static struct ubus_object_type acl_object_type =

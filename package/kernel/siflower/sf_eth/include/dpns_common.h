@@ -586,7 +586,8 @@ struct dpns_nat_priv {
 	/* INAPT ids are fixed. These are for ENAPT ID allocation. */
 	DECLARE_BITMAP(natid_bitmap, NPU_HNAT_VISIT_SIZE - NPU_HNAT_INAPT_MAXID);
 	DECLARE_BITMAP(natid_odd_entries, NPU_HNAT_VISIT_SIZE - NPU_HNAT_INAPT_MAXID);
-	u32 stats_cache[BITS_TO_U32(NPU_HNAT_SIZE)];
+	DECLARE_BITMAP(stats_cache, NPU_HNAT_SIZE);
+	struct delayed_work visit_dwork;
 	u32 elkp_size;
 	int refcnt;
 	u8 elkp_v4_acs_times;

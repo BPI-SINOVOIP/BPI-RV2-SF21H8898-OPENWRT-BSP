@@ -130,4 +130,5 @@ void acl_mode_set(bool is_eacl, u32 mode, bool is_ipv6);
 int acl_write(struct acl_data *data, bool is_ipv6);
 int acl_rewrite(bool is_eacl);
 void acl_dump_table(bool is_eacl);
+void acl_dump_list(bool is_eacl);
 #endif

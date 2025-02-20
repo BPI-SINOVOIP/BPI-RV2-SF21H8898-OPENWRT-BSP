@@ -64,6 +64,117 @@ void acl_clear(bool is_eacl)
 	acl_reset_data(is_eacl);
 }
 
+void acl_dump_list(bool is_eacl)
+{
+	u32 v4mode, v6mode;
+	struct acl_data *pos;
+	struct list_head *head = &priv->iacl_list;
+
+	if (is_eacl)
+		head = &priv->eacl_list;
+
+	if (is_eacl) {
+		v4mode = priv->ev4_mode;
+		v6mode = priv->ev6_mode;
+	} else {
+		v4mode = priv->iv4_mode;
+		v6mode = priv->iv6_mode;
+	}
+
+	list_for_each_entry(pos, head, list) {
+		printk("index: %d\n", pos->index);
+		if (pos->key) {
+			printk("v4mode: %d\n", v4mode);
+			if (pos->spl != -1)
+				printk("spl_id: %d, spl: %d \n", pos->spl_index, pos->spl);
+
+			if (v4mode == NPU_ACL_MODE0) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_mode0((struct acl_key_mode0 *)pos->key);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_mode0((struct acl_key_mode0 *)pos->mask);
+			}
+			else if (v4mode == NPU_ACL_MODE1) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_v4_mode1((struct acl_key_v4_mode1 *)pos->key);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_v4_mode1((struct acl_key_v4_mode1 *)pos->mask);
+			}
+			else if (v4mode == NPU_ACL_MODE2) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_v4_mode2((struct acl_key_v4_mode2 *)pos->key);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_v4_mode2((struct acl_key_v4_mode2 *)pos->mask);
+			}
+			else if (v4mode == NPU_ACL_MODE3) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_v4_mode3((struct acl_key_v4_mode3 *)pos->key);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_v4_mode3((struct acl_key_v4_mode3 *)pos->mask);
+			}
+			else if (v4mode == NPU_ACL_MODE4) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_v4_mode4_v6_mode1((struct acl_key_v4_mode4_v6_mode1 *)pos->key);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_v4_mode4_v6_mode1((struct acl_key_v4_mode4_v6_mode1 *)pos->mask);
+			}
+			else if (v4mode == NPU_ACL_MODE5) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_v4_mode5((struct acl_key_v4_mode5 *)pos->key);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_v4_mode5((struct acl_key_v4_mode5 *)pos->mask);
+			}
+			else if (v4mode == NPU_ACL_MODE6) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_v4_mode6((struct acl_key_v4_mode6 *)pos->key);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_v4_mode6((struct acl_key_v4_mode6 *)pos->mask);
+			}
+			else if (v4mode == NPU_ACL_MODE7) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_v6_mode7((struct acl_key_v6_mode7 *)pos->key);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_v6_mode7((struct acl_key_v6_mode7 *)pos->mask);
+			}
+		}
+
+		printk("\n");
+
+		if (pos->key6) {
+			printk("v6mode: %d\n", v6mode);
+			if (v6mode == NPU_ACL_MODE0) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_mode0((struct acl_key_mode0 *)pos->key6);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_mode0((struct acl_key_mode0 *)pos->mask6);
+			}
+			else if (v6mode == NPU_ACL_MODE1) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_v4_mode1((struct acl_key_v4_mode1 *)pos->key6);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_v4_mode1((struct acl_key_v4_mode1 *)pos->mask6);
+			}
+			else if (v6mode == NPU_ACL_MODE2) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_v6_mode2((struct acl_key_v6_mode2 *)pos->key6);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_v6_mode2((struct acl_key_v6_mode2 *)pos->mask6);
+			}
+			else if (v6mode == NPU_ACL_MODE3) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_v6_mode3((struct acl_key_v6_mode3 *)pos->key6);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_v6_mode3((struct acl_key_v6_mode3 *)pos->mask6);
+			} else if (v6mode == NPU_ACL_MODE7) {
+				printk(KERN_CONT "data:");
+				acl_dump_data_v6_mode7((struct acl_key_v6_mode7 *)pos->key6);
+				printk(KERN_CONT "mask:");
+				acl_dump_data_v6_mode7((struct acl_key_v6_mode7 *)pos->mask6);
+			}
+		}
+	}
+}
+
 void acl_dump_table(bool is_eacl)
 {
 	int mod_req_id, i, j,  tbid_kmd;
@@ -209,7 +320,7 @@ void acl_dump_table(bool is_eacl)
 			}
 		}
 	}
-};
+}
 
 static void acl_write_data(void *key, void *mask, u32 line, u32 offset, u8 loop_cnt,
 				bool is_eacl, u8 acl_w_addr, u32 spl, u32 spl_index)

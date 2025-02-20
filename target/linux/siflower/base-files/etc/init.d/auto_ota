@@ -1,0 +1,24 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+
+boot() {
+    random_value=$(date +%s | awk '{print int($1 % 180)}')
+
+    random_hour=$((2 + random_value / 60))
+    random_minute=$((random_value % 60))
+
+    crontab_file="/etc/crontabs/root"
+    cron_job="/sbin/ota auto_ota"
+
+    if [ ! -f "$crontab_file" ]; then
+        echo "Error: $crontab_file not found."
+        touch $crontab_file
+    fi
+
+    sed -i '/\/usr\/sbin\/ota auto_ota/d' "$crontab_file"
+
+    echo "$random_minute $random_hour * * 1 $cron_job" >> "$crontab_file"
+
+    /etc/init.d/cron restart
+}

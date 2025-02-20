@@ -195,8 +195,7 @@ int acl_add(struct acl_genl_msg_add *msg)
         memset(data, 0, sizeof(*data));
 
         data->is_eacl = msg->is_eacl;
-        if (msg->index <= INDEX_MAX)
-                data->index = msg->index;
+        data->index = msg->index;
 
         if (msg->key.policy == SPL_POLICY && msg->spl < SPL_MAX) {
                 data->spl = msg->spl;
@@ -210,8 +209,7 @@ int acl_add(struct acl_genl_msg_add *msg)
          * If msg->index >= priv->size, it's an append (no rewrite required),
          * otherwise it's an insertion. */
         if (msg->index >= index) {
-                if (msg->index <= INDEX_MAX)
-                        index = msg->index;
+                index = msg->index;
                 list_add_tail(&data->list, head);
                 if (data->key) {
                         ret = acl_write(data, 0);
@@ -231,6 +229,7 @@ int acl_add(struct acl_genl_msg_add *msg)
                 list_for_each_entry(pos, head, list) {
                         if (msg->index <= pos->index) {
                                 list_add(&data->list, &pos->list);
+                                list_swap(&data->list, &pos->list);
                                 ret = acl_rewrite(msg->is_eacl);
                                 if (ret < 0)
                                         return ret;
@@ -343,6 +342,10 @@ static int acl_genl_msg_recv(struct genl_info *info, void *buf, size_t buflen)
 		acl_dump_table(msg->is_eacl);
 		sfgenl_msg_reply(info, &err, sizeof(err));
 		break;
+        case ACL_DUMP_LIST:
+                acl_dump_list(msg->is_eacl);
+                sfgenl_msg_reply(info, &err, sizeof(err));
+                break;
         default:
                 err = -EINVAL;
                 sfgenl_msg_reply(info, &err, sizeof(err));

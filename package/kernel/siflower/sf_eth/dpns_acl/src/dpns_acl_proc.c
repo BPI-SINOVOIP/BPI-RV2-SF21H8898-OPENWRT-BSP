@@ -10,6 +10,7 @@ extern void acl_add(struct acl_genl_msg_add *msg);
 extern int acl_del(struct acl_genl_msg *msg);
 extern void acl_clear(bool is_eacl);
 extern void acl_dump_table(bool is_eacl);
+extern void acl_dump_list(bool is_eacl);
 extern void acl_set_mode(struct acl_genl_msg_add *msg);
 
 enum acl_blob_id {
@@ -602,6 +603,22 @@ error:
 	printk("args false\n");
 }
 
+static void acl_proc_dump_list(char *values[])
+{
+	int dir;
+
+	if (!values[BLOB_ACL_DIR])
+		goto error;
+
+	dir = !!blobmsg_get_u32(values[BLOB_ACL_DIR]);
+
+	acl_dump_list(dir);
+
+	return;
+error:
+	printk("args false\n");
+}
+
 static void acl_proc_help(void)
 {
 	printk("you can use as these: \n"
@@ -615,6 +632,7 @@ static void acl_proc_help(void)
 		"delete: you can use these to delete one entry\n"
 		"echo delete dir [dir] index [index] > proc/dpns_acl\n"
 		"dump: echo dump_table dir [dir] > proc/dpns_acl\n"
+		"dump_list: echo dump_list dir [dir] > proc/dpns_acl\n"
 		"set_mode: echo set_mode dir [dir] v4_mode [v4_mode] v6_mode [v6_mode]\n");
 }
 
@@ -687,6 +705,9 @@ static ssize_t acl_proc(struct file *filp, const char *buffer, size_t count, lof
 	}
 	else if(strcmp(cmd, "dump_table") == 0) {
 		acl_proc_dump_table(values);
+	}
+	else if(strcmp(cmd, "dump_list") == 0) {
+		acl_proc_dump_list(values);
 	}
 	else if(strcmp(cmd, "set_mode") == 0) {
 		acl_proc_set_mode(values);

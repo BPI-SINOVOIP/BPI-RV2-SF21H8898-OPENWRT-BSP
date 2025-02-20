@@ -1406,12 +1406,42 @@ static int dpns_nat_del(struct dpns_nat_priv *priv, struct flow_cls_offload *f)
 	return 0;
 }
 
+static void dpns_nat_visit_work(struct work_struct *work)
+{
+	struct dpns_nat_priv *priv = container_of(to_delayed_work(work), struct dpns_nat_priv, visit_dwork);
+	const volatile long *base = (__force void *)priv->iobase + SE_NAT_VISIT(0);
+	atomic_long_t *stats_cache = (atomic_long_t *)priv->stats_cache;
+	unsigned long i;
+
+	/* unroll the loop to reduce latency */
+	for (i = 0; i < ARRAY_SIZE(priv->stats_cache) / 8; i++) {
+		unsigned long reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7;
+
+		reg0 = base[0];
+		reg1 = base[1];
+		reg2 = base[2];
+		reg3 = base[3];
+		reg4 = base[4];
+		reg5 = base[5];
+		reg6 = base[6];
+		reg7 = base[7];
+		base += 8;
+
+		atomic_long_or(reg0, stats_cache + 0);
+		atomic_long_or(reg1, stats_cache + 1);
+		atomic_long_or(reg2, stats_cache + 2);
+		atomic_long_or(reg3, stats_cache + 3);
+		atomic_long_or(reg4, stats_cache + 4);
+		atomic_long_or(reg5, stats_cache + 5);
+		atomic_long_or(reg6, stats_cache + 6);
+		atomic_long_or(reg7, stats_cache + 7);
+		stats_cache += 8;
+	}
+}
+
 static int dpns_nat_stats(struct dpns_nat_priv *priv, struct flow_cls_offload *f)
 {
 	struct dpns_nat_entry *entry;
-	u32 val, new, reg = 0;
-	u16 nr, bit;
-	bool read_once = true;
 
 	rcu_read_lock();
 	entry = rhashtable_lookup(&priv->flow_table, &f->cookie,
@@ -1421,23 +1451,12 @@ static int dpns_nat_stats(struct dpns_nat_priv *priv, struct flow_cls_offload *f
 		return -ENOENT;
 	}
 
-	nr = entry->nat_id / BITS_PER_TYPE(*priv->stats_cache);
-	bit = entry->nat_id % BITS_PER_TYPE(*priv->stats_cache);
+	if (test_and_clear_bit(entry->nat_id, priv->stats_cache)) {
+		f->stats.lastused = get_jiffies_64();
+	} else {
+		schedule_delayed_work(&priv->visit_dwork, 1 * HZ);
+	}
 
-	do {
-		val = READ_ONCE(priv->stats_cache[nr]);
-		new = val;
-		if (!(val & BIT(bit)) && read_once) {
-			reg = sf_readl(priv, SE_NAT_VISIT(nr));
-			read_once = false;
-		}
-
-		new |= reg;
-		if (new & BIT(bit)) {
-			f->stats.lastused = jiffies;
-			new &= ~BIT(bit);
-		}
-	} while (cmpxchg(&priv->stats_cache[nr], val, new) != val);
 	rcu_read_unlock();
 
 	return 0;
@@ -1887,6 +1906,7 @@ int dpns_nat_probe(struct platform_device *pdev)
 		return -ENOMEM;
 
 	g_priv = priv;
+	INIT_DELAYED_WORK(&priv->visit_dwork, dpns_nat_visit_work);
 	priv->cpriv = dpns;
 	priv->iobase = dpns->iobase;
 	dpns->nat_priv = priv;
@@ -2018,6 +2038,7 @@ void dpns_nat_remove(struct platform_device *pdev)
 	flow_indr_dev_unregister(dpns_nat_tc_ft, priv, NULL);
 	dpns_nat_genl_exit();
 	dpns_nat_ilkp_exit(priv);
+	cancel_delayed_work_sync(&priv->visit_dwork);
 
 	priv->dnat_table = NULL;
 	priv->snat_table = NULL;

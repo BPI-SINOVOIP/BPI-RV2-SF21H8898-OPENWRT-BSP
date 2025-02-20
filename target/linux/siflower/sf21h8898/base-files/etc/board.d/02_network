@@ -1,0 +1,39 @@
+. /lib/functions.sh
+. /lib/functions/uci-defaults.sh
+. /lib/functions/system.sh
+
+siflower_setup_interfaces()
+{
+	local board="$1"
+
+	case $board in
+	siflower,sf21h8898-evb)
+		ucidef_add_switch "switch0" \
+				  "0:lan" "1:lan" "2:lan" "3:lan" "5@eth4"
+		ucidef_set_interface_lan 'eth0 eth1 eth2 eth4.1 eth5'
+		ucidef_set_interface_wan 'eth3'
+		;;
+	bananapi,bpi-rv2-nand|\
+	siflower,sf21h8898-bpi-nand)
+		ucidef_set_interface_lan 'eth0 eth1 eth2 eth3 eth5'
+		ucidef_set_interface_wan 'eth4'
+		;;
+	siflower,one-nor|\
+	siflower,one-nand)
+		ucidef_set_interface_lan 'eth0 eth1 eth2 eth3'
+		ucidef_set_interface_wan 'eth4'
+		;;
+	*)
+		ucidef_set_interfaces_lan_wan 'eth0 eth1 eth2 eth3 eth4' 'eth5'
+		;;
+	esac
+
+	ucidef_set_interface_guest 'guest'
+}
+
+board_config_update
+board=$(board_name)
+siflower_setup_interfaces $board
+board_config_flush
+
+exit 0

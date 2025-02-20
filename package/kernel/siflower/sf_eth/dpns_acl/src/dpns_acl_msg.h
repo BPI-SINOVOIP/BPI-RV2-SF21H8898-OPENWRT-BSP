@@ -308,6 +308,7 @@ enum acl_genl_method {
 	ACL_CLEAR,
 	ACL_SET_MODE,
 	ACL_DUMP,
+	ACL_DUMP_LIST,
 };
 
 enum acl_w_addr {
